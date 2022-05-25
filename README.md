@@ -1,2 +1,2 @@
-# ExcelQueryCompare
-엑셀 쿼리문 데이터 비교
+# ChatServer
+C# WebSocket ChatServer
