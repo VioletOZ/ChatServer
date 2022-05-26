@@ -31,7 +31,7 @@ namespace ChatServer
 
     public enum CHAT_COMMAND
     {
-        CHAT,                                                   // 채팅
+        CHAT = 0,                                               // 채팅
         CHANGE_CHANNEL,                                         // 채널 변경
         ENTER_GUILD_CHANNEL,                                    // 길드 채널 입장
         REPORT                                                  // 신고

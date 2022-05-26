@@ -105,6 +105,7 @@ namespace ChatServer
                         eventMessage = "";
 
                     // 구독 받은 메시지 MessageQueue 에 저장
+                    _messageQueue.Add(eventMessage);
                     Console.WriteLine("Sub Message : " + eventMessage);
 
                 }
@@ -119,7 +120,7 @@ namespace ChatServer
         }
 
         // Redis Pub
-        public async Task Publish(Message message, WebSocketSessionManager session = null)
+        public async Task Publish(string channel, Message message)
         {
             Console.WriteLine("Publish Message Type : " + message.Type);
 
@@ -130,7 +131,6 @@ namespace ChatServer
 
             _messageQueue.Add(message.Text);
             //string channel = message.Type + message.Channel;
-            string channel = CHAT_TYPE.NORMAL.ToString() + "1";
             await _subscriber.PublishAsync(channel, message.Text);
             _db.StringSet(message.Channel, message.Text);
         }

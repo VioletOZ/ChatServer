@@ -19,6 +19,7 @@ namespace ChatServer
         public string Channel { get; set; }
         public string Text { get; set; }
         public string TargetUID { get; set; }
+        public DateTime Time { get; set; }
         
     }
 }

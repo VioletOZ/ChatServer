@@ -23,7 +23,7 @@ namespace ChatServer
 
             //webSocketServer = new WebSocketServer(9000);
             webSocketServer = new WebSocketServer(Constance.PORT);
-            webSocketServer.AddWebSocketService<EventHandler>("/Chat");
+            webSocketServer.AddWebSocketService<Chat>("/Chat");
 
             //서버시작
             webSocketServer.Start();

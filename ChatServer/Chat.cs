@@ -15,11 +15,12 @@ using System.IO;
 
 namespace ChatServer
 {
-    class EventHandler : WebSocketBehavior
+    class Chat : WebSocketBehavior
     {
         private string _suffix;
-        private BlockingCollection<string> _blockQueue;
-        //private ConnectionMultiplexer _multiPlexer;        
+        //private BlockingCollection<string> _blockQueue;
+        public MessageQueue m_MessageQueue;
+        
         // Redis 구독메시지올경우 메시지 처리
         private Action<RedisChannel, RedisValue> m_onRedisMessageHandler = null;
 
@@ -30,8 +31,20 @@ namespace ChatServer
                 if (this.m_onRedisMessageHandler == null)
                 {
                     this.m_onRedisMessageHandler = new Action<RedisChannel, RedisValue>
-                                                ((channel, value) => /*this.blockQueue.Add(value)*/
-                                                SendAsync("SubHandler Val : " + value, null));
+                                                ((channel, value) =>
+                                                    {
+                                                        try
+                                                        {
+                                                            string message = DateTime.Now.ToString() + ":" + value.ToString();
+                                                            SendAsync(message, null);
+                                                        }
+                                                        catch(Exception e)
+                                                        {
+                                                            Console.WriteLine("OnRedisMessageHandler Exception : " + e.Message);
+                                                            m_ChatPlayer.LeaveAllChannel();
+                                                            CloseAsync(CloseStatusCode.ServerError, e.Message);
+                                                        }
+                                                    });
                 }
                 return this.m_onRedisMessageHandler;
             }
@@ -43,10 +56,10 @@ namespace ChatServer
         public string Channel {get; set;}
         public string GuildChannel { get; set; }
 
-        public EventHandler()
+        public Chat()
         {
             this._suffix = String.Empty;
-            this._blockQueue = new BlockingCollection<string>();
+            this.m_MessageQueue = new MessageQueue();
 
             this.m_ChatPlayer = null;
             this.m_Message = new Message();
@@ -76,11 +89,11 @@ namespace ChatServer
 
             InitClient(sessionID, UID, name, guild);
 
-            Console.WriteLine("Connected : " + ID + "(" + UID + ") Count : " + Sessions.Count);
+            Console.WriteLine("Connected : " + ID + "(UID:" + UID + ") Count : " + Sessions.Count);
 
         }
 
-        protected override void OnMessage(MessageEventArgs args)
+        protected override async void OnMessage(MessageEventArgs args)
         {
             Console.WriteLine("OnMessage ID : " + ID + "\nMsg : " + args.Data);
             if (args.Data == null)
@@ -100,7 +113,8 @@ namespace ChatServer
 
             m_Message = JsonSerializer.Deserialize<Message>(stream, options);
 
-            switch(m_Message.Command)
+            // 
+            switch (m_Message.Command)
             {
                 case CHAT_COMMAND.CHAT:
                     if (!m_ChatPlayer.SendMessage(m_Message))
@@ -108,7 +122,7 @@ namespace ChatServer
                     break;
 
                 case CHAT_COMMAND.CHANGE_CHANNEL:
-                    if (!m_ChatPlayer.ChangeChannel(m_Message.Channel))
+                    if(!await m_ChatPlayer.ChangeChannel(m_Message.Channel, OnRedisMessageHandler))
                         SendAsync(ERROR_CODE.NULLDATA.ToString(), null);
                     break;
 
@@ -145,35 +159,10 @@ namespace ChatServer
             }
         }
 
-        public void ChatProcAdd(Message message)
+        protected override void OnError(WebSocketSharp.ErrorEventArgs e)
         {
-            Console.WriteLine("Func MessageProcAdd");
-
-            //_blockQueue.Add(new Message
-            //{
-            //    Type = message.Type,
-            //    Text = message.Text
-            //}.Serialize());
-
-            // Redis Publish
-            _ = RedisManager.Instance.Publish(message);
-        }
-
-        public void ChatprocGet()
-        {
-            Console.WriteLine("Func MessageProcGet");
-            foreach ( string item in _blockQueue.GetConsumingEnumerable())
-            {
-                //Sessions.BroadcastAsync(item.Serialize(), null);
-                Console.Write(item.Serialize(), null);
-            }
-        }
-
-        public void RunTask(Message message)
-        {
-            Console.WriteLine("Func RunTask");
-            //this._outTask = Task.Run(() => ChatprocGet());
-            Task.Run(() => ChatProcAdd(message));
+            Console.WriteLine("/////////////////////////////////////" + e.Message);
+            base.OnError(e);
         }
 
         public void TargetSend(string sessionID, string message)
@@ -190,7 +179,7 @@ namespace ChatServer
             // 접속시에 유저정보 세팅
             m_ChatPlayer = new ChatPlayer(sessionId, uid, name, guild);
 
-            var result = await RedisManager.Instance.AuthVerify(sessionId);
+            var result = await m_ChatPlayer.AuthVerify();
             if (!result)
             {
                 Console.WriteLine("세션 인증실패 - SessionID : " + sessionId + " " + uid + name);
@@ -199,20 +188,20 @@ namespace ChatServer
             }
 
             // 접속시에 일반 채널 구독
-            string channel = CHAT_TYPE.NORMAL.ToString() + "1";             //채널별 인원수 및 최대채널 등을 고려하여 임시선정필요
-            _ = RedisManager.Instance.Subscribe(channel, ID);
-            m_ChatPlayer.EnterChannel(channel, ID);
-
-            Console.WriteLine("========================================");
-            _ = RedisManager.Instance.SubscribeAction(channel, OnRedisMessageHandler);
+            string channel = CHAT_TYPE.NORMAL.ToString();             //채널별 인원수 및 최대채널 등을 고려하여 임시선정필요            
+            string channelNum = "1";
+            //_ = RedisManager.Instance.SubscribeAction(channel, OnRedisMessageHandler);
+            m_ChatPlayer.EnterChannel(channel, channelNum, OnRedisMessageHandler);            
 
             // 길드가 있을경우 길드도 구독
             if (string.IsNullOrEmpty(guild))
             {
-                string guildChannel = CHAT_TYPE.GUILD.ToString() + guild;
-                _ = RedisManager.Instance.Subscribe(guildChannel, ID);
+                //_ = RedisManager.Instance.Subscribe(guildChannel, ID);
+                m_ChatPlayer.EnterChannel(CHAT_TYPE.GUILD.ToString(), guild, OnRedisMessageHandler);
             }
-            
+
+            Sessions.BroadcastAsync("BroadCast)" + m_ChatPlayer.Name + "님이 입장하셨습니다.", null);
+
         }
         
     }
