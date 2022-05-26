@@ -1,0 +1,26 @@
+version: '3.7'
+
+services:
+    chatserver:      
+      build:
+         #context: .
+         context: .
+         dockerfile: ./ChatServer/Dockerfile
+      ports:
+        - "9000:9000"
+      environment:
+        - RedisConnection=chat_redis
+      volumes:
+        - "../data/ChatServer:/usr/local/data"
+      links:
+        - "chat_redis"
+      depends_on:
+        - "chat_redis"
+
+    chat_redis:
+      image: redis:6.2
+      container_name: chat_redis
+      volumes:
+        - "../data/redis:/usr/local/redis/data"
+      ports:
+        - "6379:6379"
