@@ -48,16 +48,16 @@ namespace ChatServer
             Console.WriteLine("ESC Exit");
             while (true)
             {
-                if (Console.KeyAvailable)
-                {
-                    var keyInfo = Console.ReadKey();
-                    if (keyInfo.Key == ConsoleKey.Escape)
-                    {
-                        //queue.CompleteAdding();
-                        Console.ReadLine();
-                        break;
-                    }
-                }
+                //if (Console.KeyAvailable)
+                //{
+                //    var keyInfo = Console.ReadKey();
+                //    if (keyInfo.Key == ConsoleKey.Escape)
+                //    {
+                //        //queue.CompleteAdding();
+                //        Console.ReadLine();
+                //        break;
+                //    }
+                //}
             }
         }
     }

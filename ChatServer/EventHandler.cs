@@ -204,7 +204,7 @@ namespace ChatServer
             m_ChatPlayer.EnterChannel(channel, ID);
 
             Console.WriteLine("========================================");
-            _ = RedisManager.Instance.testSub(channel, OnRedisMessageHandler);
+            _ = RedisManager.Instance.SubscribeAction(channel, OnRedisMessageHandler);
 
             // 길드가 있을경우 길드도 구독
             if (string.IsNullOrEmpty(guild))

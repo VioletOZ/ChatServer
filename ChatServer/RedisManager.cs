@@ -76,7 +76,7 @@ namespace ChatServer
             return true;
         }
 
-        public async Task<bool> testSub(string channel, Action<RedisChannel, RedisValue> ac)
+        public async Task<bool> SubscribeAction(string channel, Action<RedisChannel, RedisValue> ac)
         {
             await _multiplexer.GetSubscriber().SubscribeAsync(channel, ac);
             return true;
