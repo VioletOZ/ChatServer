@@ -20,7 +20,7 @@ namespace ChatServer
         private string _suffix;
         //private BlockingCollection<string> _blockQueue;
         public MessageQueue m_MessageQueue;
-        
+
         // Redis 구독메시지올경우 메시지 처리
         private Action<RedisChannel, RedisValue> m_onRedisMessageHandler = null;
 
@@ -42,6 +42,7 @@ namespace ChatServer
                                                         {
                                                             Console.WriteLine("OnRedisMessageHandler Exception : " + e.Message);
                                                             m_ChatPlayer.LeaveAllChannel();
+                                                            Console.WriteLine("LeaveChannel : " + m_ChatPlayer.SessionID);
                                                             CloseAsync(CloseStatusCode.ServerError, e.Message);
                                                         }
                                                     });
@@ -49,6 +50,15 @@ namespace ChatServer
                 return this.m_onRedisMessageHandler;
             }
         }
+
+        JsonSerializerOptions options = new JsonSerializerOptions
+        {
+            Converters =
+                {
+                    new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)
+                }
+        };
+
 
         public ChatPlayer m_ChatPlayer;
         public Message m_Message;
@@ -85,10 +95,17 @@ namespace ChatServer
             string sessionID = this.Headers.Get("SessionID") ?? null;          //SessionID
             string UID = this.Headers.Get("UID") ?? null;                      //UserUID
             string name = this.Headers.Get("Name") ?? null;                    //Name - Redis에 없는듯하여 클라에서 받아옴
-            string guild = this.Headers.Get("Guild") ?? "Test_Guild";                  //Guild - Redis에 없는듯하여 클라에서 받아옴
+            string guild = this.Headers.Get("Guild") ?? "Test_Guild";          //Guild - Redis에 없는듯하여 클라에서 받아옴
 
-            InitClient(sessionID, UID, name, guild);
+            InitClient(sessionID, UID, name);
 
+            ResMessage resMessage = new ResMessage();
+            resMessage.Status = ERROR_CODE.SUCCESS;
+            resMessage.Type = CHAT_TYPE.SYSTEM;
+            resMessage.Channel = 1;
+            resMessage.Text = "OnOpen";
+
+            SendAsync(JsonSerializer.Serialize<ResMessage>(resMessage, options), null);
             Console.WriteLine("Connected : " + ID + "(UID:" + UID + ") Count : " + Sessions.Count);
 
         }
@@ -103,14 +120,7 @@ namespace ChatServer
             }
 
             MemoryStream stream = new MemoryStream(Encoding.UTF8.GetBytes(args.Data));
-            var options = new JsonSerializerOptions
-            {
-                Converters =
-                {
-                    new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)
-                }
-            };
-
+            
             m_Message = JsonSerializer.Deserialize<Message>(stream, options);
 
             // 
@@ -118,17 +128,17 @@ namespace ChatServer
             {
                 case CHAT_COMMAND.CHAT:
                     if (!m_ChatPlayer.SendMessage(m_Message))
-                        SendAsync(ERROR_CODE.NULLDATA.ToString(), null);
+                        SendAsync(ERROR_CODE.ERROR.ToString(), null);
                     break;
 
                 case CHAT_COMMAND.CHANGE_CHANNEL:
                     if(!await m_ChatPlayer.ChangeChannel(m_Message.Channel, OnRedisMessageHandler))
-                        SendAsync(ERROR_CODE.NULLDATA.ToString(), null);
+                        SendAsync(ERROR_CODE.ERROR.ToString(), null);
                     break;
 
                 case CHAT_COMMAND.ENTER_GUILD_CHANNEL:
-                    if (!m_ChatPlayer.EnterGuildChannel(m_Message.Channel))
-                        SendAsync(ERROR_CODE.NULLDATA.ToString(), null);
+                    if (!m_ChatPlayer.EnterGuildChannel(m_Message.Type))
+                        SendAsync(ERROR_CODE.ERROR.ToString(), null);
                     break;
 
                 case CHAT_COMMAND.REPORT:
@@ -145,6 +155,13 @@ namespace ChatServer
             // 지금은 일단 그냥 접속종료
 
             Console.WriteLine("OnClose : " + ID);
+
+            ResMessage resMessage = new ResMessage();
+            resMessage.Status = ERROR_CODE.SUCCESS;
+            resMessage.Type = CHAT_TYPE.SYSTEM;
+            resMessage.Channel = m_ChatPlayer.channelDict[CHAT_TYPE.NORMAL];
+            resMessage.Text = "OnOpen";
+
             Sessions.BroadcastAsync(m_ChatPlayer.Name + "님이 퇴장하셨습니다.", null);
 
             try
@@ -171,13 +188,13 @@ namespace ChatServer
             SendAsync(message, null);
         }
 
-        public async void InitClient(string sessionId, string uid, string name, string guild)
+        public async void InitClient(string sessionId, string uid, string name)
         {
             if (m_ChatPlayer != null)
                 Console.WriteLine("Chat OnOpen ChatPlayer not null : " + ID);
 
             // 접속시에 유저정보 세팅
-            m_ChatPlayer = new ChatPlayer(sessionId, uid, name, guild);
+            m_ChatPlayer = new ChatPlayer(sessionId, uid, name);
 
             var result = await m_ChatPlayer.AuthVerify();
             if (!result)
@@ -187,20 +204,18 @@ namespace ChatServer
                 return;
             }
 
-            // 접속시에 일반 채널 구독
-            string channel = CHAT_TYPE.NORMAL.ToString();             //채널별 인원수 및 최대채널 등을 고려하여 임시선정필요            
-            string channelNum = "1";
-            //_ = RedisManager.Instance.SubscribeAction(channel, OnRedisMessageHandler);
-            m_ChatPlayer.EnterChannel(channel, channelNum, OnRedisMessageHandler);            
+            // 접속시에 일반 채널 구독            
+            int channelNum = 1;            
+            m_ChatPlayer.EnterChannel(CHAT_TYPE.NORMAL, channelNum, OnRedisMessageHandler);
 
+            string guild = Constance.GUILD;
             // 길드가 있을경우 길드도 구독
             if (string.IsNullOrEmpty(guild))
             {
-                //_ = RedisManager.Instance.Subscribe(guildChannel, ID);
-                m_ChatPlayer.EnterChannel(CHAT_TYPE.GUILD.ToString(), guild, OnRedisMessageHandler);
+                // 길드UID를 채널번호로 지정 . 일단임시로
+                int guildUID = 1;
+                m_ChatPlayer.EnterChannel(CHAT_TYPE.GUILD, guildUID, OnRedisMessageHandler);
             }
-
-            Sessions.BroadcastAsync("BroadCast)" + m_ChatPlayer.Name + "님이 입장하셨습니다.", null);
 
         }
         

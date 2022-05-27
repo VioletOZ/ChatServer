@@ -8,18 +8,26 @@ namespace ChatServer
 {
     public enum ERROR_CODE
     {
-        SUCCESS = 0,
-        ERROR = 1,
-        NULLDATA = 2
+        SUCCESS = 0,                                            // 성공
+        ERROR = 1,                                              // 실패
     }
+
     public enum CHAT_TYPE
     {
-        NORMAL = 0,
-        WHISPER,
-        GUILD,
-        SYSTEM,
-        SERVER
+        NORMAL = 0,                                             // 일반채널
+        GUILD,                                                  // 길드
+        SYSTEM,                                                 // 시스템
+        SERVER                                                  // 서버
     }
+    
+    public enum CHAT_COMMAND
+    {
+        CHAT = 0,                                               // 채팅
+        CHANGE_CHANNEL,                                         // 채널 변경
+        ENTER_GUILD_CHANNEL,                                    // 길드 채널 입장
+        REPORT                                                  // 신고
+    }
+
     public enum CONNECT_STATE
     {
         CONNECTING = 0,
@@ -29,14 +37,6 @@ namespace ChatServer
         ERROR = 99
     }
 
-    public enum CHAT_COMMAND
-    {
-        CHAT = 0,                                               // 채팅
-        CHANGE_CHANNEL,                                         // 채널 변경
-        ENTER_GUILD_CHANNEL,                                    // 길드 채널 입장
-        REPORT                                                  // 신고
-    }
-
     static class Constance
     {
         public const string ADDRESS = "127.0.0.1";
@@ -44,6 +44,10 @@ namespace ChatServer
         public const int CHANNEL_PLAYER_MAX = 50;               // 채널당 최대인원
         public const int CHANNEL_MAX = 9999;                    // 최대 채널갯수
 
+        public const string NORMAL = "NORMAL";
+        public const string GUILD = "GUILD";
+        public const string SYSTEM = "SYSTEM";
+        public const string SERVER = "SERVER";
     }
     
 }

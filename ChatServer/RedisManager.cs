@@ -105,7 +105,6 @@ namespace ChatServer
                         eventMessage = "";
 
                     // 구독 받은 메시지 MessageQueue 에 저장
-                    _messageQueue.Add(eventMessage);
                     Console.WriteLine("Sub Message : " + eventMessage);
 
                 }
@@ -132,12 +131,18 @@ namespace ChatServer
             _messageQueue.Add(message.Text);
             //string channel = message.Type + message.Channel;
             await _subscriber.PublishAsync(channel, message.Text);
-            _db.StringSet(message.Channel, message.Text);
+            //_db.StringSet(message.Channel.ToString(), message.Text);
+        }
+
+        // 서버에서 특정채널에 메시지만 보내도록 쓸려고 만든것
+        public async Task ForcePublish(string channel, string message)
+        {
+            await _subscriber.PublishAsync(channel, message);
         }
 
         public async Task UnSubscribe(string channel, string session)
         {
-            await _subscriber.UnsubscribeAsync(channel);
+            await _subscriber.UnsubscribeAsync(channel.ToString());
         }
 
         public async Task UnSubscribeAll()
