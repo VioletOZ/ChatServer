@@ -135,9 +135,9 @@ namespace ChatServer
         }
 
         // 서버에서 특정채널에 메시지만 보내도록 쓸려고 만든것
-        public async Task ForcePublish(string channel, string message)
+        public void ForcePublish(string channel, string message)
         {
-            await _subscriber.PublishAsync(channel, message);
+            _ = _subscriber.PublishAsync(channel, message);
         }
 
         public async Task UnSubscribe(string channel, string session)

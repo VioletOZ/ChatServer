@@ -125,7 +125,7 @@ namespace ChatServer
             await RedisManager.Instance.SubscribeAction(ch, action);
 
             string message = Name + " 님이 입장하셨습니다.";
-            await RedisManager.Instance.ForcePublish(ch, message);
+            _ = RedisManager.Instance.ForcePublish(ch, message);
 
             return true;
         }
@@ -152,7 +152,7 @@ namespace ChatServer
                     Console.WriteLine("ChatPlayer ChannelChange>Enter Fail");
 
                 string message = Name + " 님이 나가셨습니다.";
-                _ = Task.Run(() => RedisManager.Instance.ForcePublish(beforeChannel.ToString(), message));
+                _ = RedisManager.Instance.ForcePublish(beforeChannel.ToString(), message);
 
             }
             catch (Exception e)
@@ -180,7 +180,7 @@ namespace ChatServer
         {
             string ch = Constance.NORMAL + NormalChannel.ToString(); ;
             //channelDict.AsParallel().ForAll(entry => Task.Run(() => RedisManager.Instance.UnSubscribe(entry.Key.ToString() + entry.Value, this.SessionID)));
-            _ = Task.Run(() => RedisManager.Instance.UnSubscribe(ch, SessionID));
+            _ = RedisManager.Instance.UnSubscribe(ch, SessionID);
             return true;
         }
 
