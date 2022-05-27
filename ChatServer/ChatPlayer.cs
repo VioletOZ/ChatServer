@@ -18,7 +18,7 @@ namespace ChatServer
         public Dictionary<CHAT_TYPE, int> channelDict = new Dictionary<CHAT_TYPE, int>();        // 현재 참여중인 채널 <채널이름, 채널번호>
 
         public int NormalChannel { get; set; }              // 쓰기편하려고.. 
-        public int GuildCHannel { get; set; }
+        public int GuildChannel { get; set; }
         
         // 1:1 대화등의 메시지 저장용
         public Dictionary<string, BlockingCollection<string>> WhisperMessage { get; set; }
@@ -59,22 +59,22 @@ namespace ChatServer
             switch (message.Type)
             {
                 case CHAT_TYPE.NORMAL:
-                     ch = Constance.NORMAL + message.Channel.ToString();
+                     ch = Constance.NORMAL + NormalChannel;
                     Task.Run(() => RedisManager.Instance.Publish(ch, message));
                     break;
 
                 case CHAT_TYPE.GUILD:
-                    ch = Constance.GUILD + message.Channel.ToString();
+                    ch = Constance.GUILD + GuildChannel;
                     Task.Run(() => RedisManager.Instance.Publish(ch, message));
                     break;
 
                 case CHAT_TYPE.SYSTEM:
-                    ch = Constance.SYSTEM + message.Channel.ToString();
+                    ch = Constance.SYSTEM;
                     Task.Run(() => RedisManager.Instance.Publish(ch, message));
                     break;
 
                 case CHAT_TYPE.SERVER:
-                    ch = Constance.SERVER + message.Channel.ToString();
+                    ch = Constance.SERVER;
                     Task.Run(() => RedisManager.Instance.Publish(ch, message));
                     break;
             }
@@ -95,7 +95,7 @@ namespace ChatServer
             return true;
         }
 
-        public bool EnterChannel(CHAT_TYPE channel, int channelNum, Action<RedisChannel, RedisValue> action)
+        public async Task<bool> EnterChannel(CHAT_TYPE channel, int channelNum, Action<RedisChannel, RedisValue> action)
         {
             //Task.Run(() => RedisManager.Instance.Subscribe(channel, sessionId));
             if (!channelDict.ContainsKey(channel))
@@ -121,11 +121,12 @@ namespace ChatServer
             }
             
 
-            Console.WriteLine("EnterChannel : " + NormalChannel);
-            Task.Run(() => RedisManager.Instance.SubscribeAction(ch, action));
+            Console.WriteLine("EnterChannel : " + ch);
+            await RedisManager.Instance.SubscribeAction(ch, action);
 
             string message = Name + " 님이 입장하셨습니다.";
-            Task.Run(() => RedisManager.Instance.ForcePublish(ch, message));
+            await RedisManager.Instance.ForcePublish(ch, message);
+
             return true;
         }
 
@@ -141,12 +142,13 @@ namespace ChatServer
                 Console.WriteLine("Change Channel : " + channelDict[CHAT_TYPE.NORMAL]);
 
                 // 구독중인 채널 삭제하고
-                await RedisManager.Instance.UnSubscribe(NormalChannel.ToString(), SessionID);
+                string ch = Constance.NORMAL + beforeChannel.ToString();
+                await RedisManager.Instance.UnSubscribe(ch, SessionID);
                 NormalChannel = channelNum;
 
                 // 다시 구독요청
                 Console.WriteLine("ChangeChannel : " + CHAT_TYPE.NORMAL.ToString() + channelNum);
-                if (!EnterChannel(CHAT_TYPE.NORMAL, channelNum, action))
+                if (!await EnterChannel(CHAT_TYPE.NORMAL, channelNum, action))
                     Console.WriteLine("ChatPlayer ChannelChange>Enter Fail");
 
                 string message = Name + " 님이 나가셨습니다.";
@@ -176,7 +178,9 @@ namespace ChatServer
 
         public bool LeaveAllChannel()
         {
-            channelDict.AsParallel().ForAll(entry => Task.Run(() => RedisManager.Instance.UnSubscribe(entry.Key.ToString() + entry.Value, this.SessionID)));
+            string ch = Constance.NORMAL + NormalChannel.ToString(); ;
+            //channelDict.AsParallel().ForAll(entry => Task.Run(() => RedisManager.Instance.UnSubscribe(entry.Key.ToString() + entry.Value, this.SessionID)));
+            _ = Task.Run(() => RedisManager.Instance.UnSubscribe(ch, SessionID));
             return true;
         }
 

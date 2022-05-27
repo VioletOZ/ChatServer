@@ -121,7 +121,7 @@ namespace ChatServer
         // Redis Pub
         public async Task Publish(string channel, Message message)
         {
-            Console.WriteLine("Publish Message Type : " + message.Type);
+            Console.WriteLine("Publish Message Type : " + message.Type +"-" +channel);
 
             
             // TODO: 보내기전에 Connect 확인
@@ -142,7 +142,7 @@ namespace ChatServer
 
         public async Task UnSubscribe(string channel, string session)
         {
-            await _subscriber.UnsubscribeAsync(channel.ToString());
+            await _subscriber.UnsubscribeAsync(channel);
         }
 
         public async Task UnSubscribeAll()
