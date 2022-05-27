@@ -155,16 +155,8 @@ namespace ChatServer
 
             Sessions.BroadcastAsync(m_ChatPlayer.Name + "님이 퇴장하셨습니다.", null);
 
-            try
-            {
-                CloseAsync();
-                Console.WriteLine("Session Close Count : " + Sessions.Count);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("Error : " + e.Message);
-                CloseAsync(CloseStatusCode.ServerError, e.Message);
-            }
+            CloseAsync();
+            Console.WriteLine("Session Close Count : " + Sessions.Count);            
         }
 
         protected override void OnError(WebSocketSharp.ErrorEventArgs e)
