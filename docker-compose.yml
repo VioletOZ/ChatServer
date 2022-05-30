@@ -12,15 +12,21 @@ services:
         - RedisConnection=chat_redis
       volumes:
         - "../data/ChatServer:/usr/local/data"
+        - "./Config/sysctl.conf"
       links:
         - "chat_redis"
       depends_on:
         - "chat_redis"
 
     chat_redis:
-      image: redis:6.2
       container_name: chat_redis
+      image: redis:6.2
       volumes:
         - "../data/redis:/usr/local/redis/data"
+        #- "..//Config/redis.conf:/usr/local/etc/redis"
       ports:
         - "6379:6379"
+      #command:
+        #- sysctl -w vm.overcommit_memory=1
+        #- redis-server /usr/local/etc/redis/redis.conf
+        

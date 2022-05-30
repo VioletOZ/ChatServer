@@ -10,7 +10,7 @@ namespace ChatServer
 {
     class MessageQueue
     {
-        private BlockingCollection<string> _queue = new BlockingCollection<string>();
+        private BlockingCollection<ChatLogData> _queue = new BlockingCollection<ChatLogData>();
         private CancellationTokenSource _source = new CancellationTokenSource();
 
         public object LockObj = new object();
@@ -21,11 +21,11 @@ namespace ChatServer
 
         public void CancelTake() { _source.Cancel(); }
 
-        public bool Add(string msg)
+        public bool Add(ChatLogData logData)
         {
             try
             {
-                _queue.Add(msg);
+                _queue.Add(logData);
                 return true;
             }
             catch (Exception e)
@@ -35,7 +35,7 @@ namespace ChatServer
             }
         }
 
-        public bool Take(ref string msg)
+        public bool Take(ref ChatLogData msg)
         {
             try
             {

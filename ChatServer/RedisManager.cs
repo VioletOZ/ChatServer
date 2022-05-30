@@ -7,6 +7,10 @@ using System.Threading.Tasks;
 using StackExchange.Redis;
 using WebSocketSharp.Server;
 
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
+
 namespace ChatServer
 {
     class RedisManager
@@ -29,6 +33,14 @@ namespace ChatServer
                 return _instance;
             }
         }
+
+        JsonSerializerOptions options = new JsonSerializerOptions
+        {
+            Converters =
+                {
+                    new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)
+                }
+        };
 
         private ISubscriber _subscriber { get; }
         private IDatabase _db { get; }
@@ -82,7 +94,7 @@ namespace ChatServer
             return true;
         }
         // Redis Subscribe - 구독하고 있는 채널에 Pub가 오면 구독중인 Client에 메시지 전달
-        public async Task<bool> Subscribe(string channel, string session=null)
+        public bool Subscribe(string channel, string session=null)
         {
             if (string.IsNullOrEmpty(channel)) 
                 return false;
@@ -96,7 +108,7 @@ namespace ChatServer
 
             Console.WriteLine("Sub Channel : " + channel);
 
-            await _multiplexer.GetSubscriber().SubscribeAsync(channel, (RedisChannel ch, RedisValue val) =>
+            _multiplexer.GetSubscriber().SubscribeAsync(channel, (RedisChannel ch, RedisValue val) =>
             {
                 try
                 {
@@ -119,18 +131,26 @@ namespace ChatServer
         }
 
         // Redis Pub
-        public async Task Publish(string channel, Message message)
+        public async Task Publish(string channel, req_ChatMessage message)
         {
-            Console.WriteLine("Publish Message Type : " + message.Type +"-" +channel);
+            Console.WriteLine("Publish Message Type : " + message.ChatType +"-" +channel);
 
-            
             // TODO: 보내기전에 Connect 확인
             //if (!isConnected)
             //    return;
 
-            _messageQueue.Add(message.Text);
+            res_ChatMessage resMessage = new res_ChatMessage();
+            resMessage.ReturnCode = RETURN_CODE.RC_OK;
+            resMessage.ChatType = message.ChatType;
+            resMessage.ChannelID = message.ChannelID;
+            resMessage.LogData = message.LogData;
+
+            string json = JsonSerializer.Serialize<res_ChatMessage>(resMessage, options);
+
+            _messageQueue.Add(message.LogData);
             //string channel = message.Type + message.Channel;
-            await _subscriber.PublishAsync(channel, message.Text);
+            //await _subscriber.PublishAsync(channel, message.Text);
+            await _subscriber.PublishAsync(channel, json);
             //_db.StringSet(message.Channel.ToString(), message.Text);
         }
 

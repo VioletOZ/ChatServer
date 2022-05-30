@@ -7,6 +7,9 @@ FROM mcr.microsoft.com/dotnet/sdk:5.0 AS build
 WORKDIR /src
 #EXPOSE 80 443 9000
 
+RUN apt update
+RUN apt install procps -y
+
 COPY ["ChatServer/ChatServer.csproj", "ChatServer/"]
 RUN dotnet restore "ChatServer/ChatServer.csproj"
 COPY . .

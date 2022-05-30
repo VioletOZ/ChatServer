@@ -47,7 +47,7 @@ namespace ChatServer
             return true;
         }
 
-        public bool SendMessage(Message message)
+        public bool SendMessage(req_ChatMessage message)
         {
             if (message == null)
             {
@@ -56,25 +56,25 @@ namespace ChatServer
             }
 
             string ch;
-            switch (message.Type)
+            switch (message.ChatType)
             {
-                case CHAT_TYPE.NORMAL:
+                case CHAT_TYPE.CT_NORMAL:
                      ch = Constance.NORMAL + NormalChannel;
                     Task.Run(() => RedisManager.Instance.Publish(ch, message));
                     break;
 
-                case CHAT_TYPE.GUILD:
+                case CHAT_TYPE.CT_GUILD:
                     ch = Constance.GUILD + GuildChannel;
                     Task.Run(() => RedisManager.Instance.Publish(ch, message));
                     break;
 
-                case CHAT_TYPE.SYSTEM:
+                case CHAT_TYPE.CT_SYSTEM:
                     ch = Constance.SYSTEM;
                     Task.Run(() => RedisManager.Instance.Publish(ch, message));
                     break;
 
-                case CHAT_TYPE.SERVER:
-                    ch = Constance.SERVER;
+                case CHAT_TYPE.CT_GM_NOTICE:
+                    ch = Constance.GM_NOTICE;
                     Task.Run(() => RedisManager.Instance.Publish(ch, message));
                     break;
             }
@@ -82,7 +82,7 @@ namespace ChatServer
             return true;
         }
 
-        public bool RecvMessage(Message message)
+        public bool RecvMessage(req_ChatMessage message)
         {
             if (message == null)
             {
@@ -90,7 +90,7 @@ namespace ChatServer
                 return false;
             }
 
-            Task.Run(() => RedisManager.Instance.UnSubscribe(message.Channel.ToString(), null));
+            Task.Run(() => RedisManager.Instance.UnSubscribe(message.ChannelID.ToString(), null));
             //string temp = Channels[channel].Dequeue();
             return true;
         }
@@ -104,19 +104,19 @@ namespace ChatServer
             string ch = "";
             switch (channel)
             {
-                case CHAT_TYPE.NORMAL:
+                case CHAT_TYPE.CT_NORMAL:
                     NormalChannel = channelNum;
                     ch = Constance.NORMAL + channelNum.ToString();
                     break;
 
-                case CHAT_TYPE.GUILD:
+                case CHAT_TYPE.CT_GUILD:
                     ch = Constance.GUILD + channelNum.ToString();
                     break;
-                case CHAT_TYPE.SYSTEM:
+                case CHAT_TYPE.CT_SYSTEM:
                     ch = Constance.SYSTEM;
                     break;
-                case CHAT_TYPE.SERVER:
-                    ch = Constance.SERVER;
+                case CHAT_TYPE.CT_GM_NOTICE:
+                    ch = Constance.GM_NOTICE;
                     break;
             }
             
@@ -124,8 +124,8 @@ namespace ChatServer
             Console.WriteLine("EnterChannel : " + ch);
             await RedisManager.Instance.SubscribeAction(ch, action);
 
-            string message = Name + " 님이 입장하셨습니다.";
-            RedisManager.Instance.ForcePublish(ch, message);
+            //string message = Name + " 님이 입장하셨습니다.";
+            //RedisManager.Instance.ForcePublish(ch, message);
 
             return true;
         }
@@ -138,8 +138,8 @@ namespace ChatServer
                 // 변경 전 채널
                 int beforeChannel = NormalChannel;
                 // 기존 채널 정보 변경후에
-                channelDict[CHAT_TYPE.NORMAL] = channelNum;
-                Console.WriteLine("Change Channel : " + channelDict[CHAT_TYPE.NORMAL]);
+                channelDict[CHAT_TYPE.CT_NORMAL] = channelNum;
+                Console.WriteLine("Change Channel : " + channelDict[CHAT_TYPE.CT_NORMAL]);
 
                 // 구독중인 채널 삭제하고
                 string ch = Constance.NORMAL + beforeChannel.ToString();
@@ -147,8 +147,8 @@ namespace ChatServer
                 NormalChannel = channelNum;
 
                 // 다시 구독요청
-                Console.WriteLine("ChangeChannel : " + CHAT_TYPE.NORMAL.ToString() + channelNum);
-                if (!await EnterChannel(CHAT_TYPE.NORMAL, channelNum, action))
+                Console.WriteLine("ChangeChannel : " + CHAT_TYPE.CT_NORMAL.ToString() + channelNum);
+                if (!await EnterChannel(CHAT_TYPE.CT_NORMAL, channelNum, action))
                     Console.WriteLine("ChatPlayer ChannelChange>Enter Fail");
 
                 string message = Name + " 님이 나가셨습니다.";
