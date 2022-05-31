@@ -211,9 +211,9 @@ namespace ChatServer
 
 
                     if (CHAT_TYPE.CT_NORMAL == enterMessage.ChatType)
-                        channel = m_ChatPlayer.NormalChannel.ToString();
+                        channel = m_ChatPlayer.GetNormalChannel();
                     else
-                        channel = m_ChatPlayer.GuildChannel.ToString();
+                        channel = m_ChatPlayer.GetGuildChannel();
 
                     enterChannel.Command = CHAT_COMMAND.CT_ENTER_CHANNEL;
                     enterChannel.ChannelID = enterMessage.ChannelID;                    
