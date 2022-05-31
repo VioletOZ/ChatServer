@@ -210,13 +210,12 @@ namespace ChatServer
                         enterChannel.ReturnCode = RETURN_CODE.RC_OK;
 
 
-                    if (CHAT_TYPE.CT_NORMAL == enterChannel.ChatType)
+                    if (CHAT_TYPE.CT_NORMAL == enterMessage.ChatType)
                         channel = m_ChatPlayer.NormalChannel.ToString();
                     else
                         channel = m_ChatPlayer.GuildChannel.ToString();
 
-                    enterChannel.Command = CHAT_COMMAND.CT_ENTER_CHANNEL;                    
-                    enterChannel.ChatType = enterMessage.ChatType;
+                    enterChannel.Command = CHAT_COMMAND.CT_ENTER_CHANNEL;
                     enterChannel.ChannelID = enterMessage.ChannelID;                    
                     enterChannel.ChannelUserDataList = RedisManager.Instance.GetUsersByChannel(channel);
                     SendAsync(JsonSerializer.Serialize<res_ChatEnterChannel>(enterChannel, options), null);
