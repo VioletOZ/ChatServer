@@ -140,6 +140,7 @@ namespace ChatServer
             //    return;
 
             res_ChatMessage resMessage = new res_ChatMessage();
+            resMessage.Command = CHAT_COMMAND.CT_MESSAGE;
             resMessage.ReturnCode = RETURN_CODE.RC_OK;
             resMessage.ChatType = message.ChatType;
             resMessage.ChannelID = message.ChannelID;

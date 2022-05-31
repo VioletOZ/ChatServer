@@ -55,6 +55,7 @@ namespace ChatServer
             if (message == null)
             {
                 Console.WriteLine("ChatPlayer PushMessage Message Null");
+                return;
             }
 
             string ch;
@@ -87,6 +88,7 @@ namespace ChatServer
             if (message == null)
             {
                 Console.WriteLine("ChatPlayer RecvMessage Message Null");
+                return;
             }
 
             await Task.Run(() => RedisManager.Instance.UnSubscribe(message.ChannelID.ToString(), null));
@@ -95,22 +97,34 @@ namespace ChatServer
 
         public  async void Reconnect(req_ChatReConnect message)
         {
-            
+            if (message == null)
+            {
+                Console.WriteLine("ChatPlayer Reconnect Message Null");
+                return;
+            }
         }
         
         public async void LogOut(req_ChatLogout message)
         {
-            
+
         }
 
         public async void ChannelInfo(req_ChatInfo message)
         {
-            
+            if (message == null)
+            {
+                Console.WriteLine("ChatPlayer ChannelInfo Message Null");
+                return;
+            }
         }
 
         public async void GuildChatLog(req_ChatGuildLog message)
         {
-
+            if (message == null)
+            {
+                Console.WriteLine("ChatPlayer RecvMessage Message Null");
+                return;
+            }
         }
 
         // 채널변경은 일반 채널밖에 되지않음.
@@ -175,26 +189,40 @@ namespace ChatServer
 
         public async void LeaveChannel(req_ChatLeaveChannel message)
         {
-            
+            if (message == null)
+            {
+                Console.WriteLine("ChatPlayer LeaveCHannel Message Null");
+                return;
+            }
         }
 
-        public async void LeaderChange(req_ChatLeaderChange argData)
+        public async void LeaderChange(req_ChatLeaderChange message)
         {
-            
+            if (message == null)
+            {
+                Console.WriteLine("ChatPlayer LeaderChange Message Null");
+                return;
+            }
         }
 
-        public async void GaChaNotice(req_ChatGachaNotice argData)
+        public async void GachaNotice(req_ChatGachaNotice message)
         {
-            
+            if (message == null)
+            {
+                Console.WriteLine("ChatPlayer GachaNotice Message Null");
+                return;
+            }
         }
 
 
-        public bool LeaveAllChannel()
+        public void LeaveAllChannel()
         {
-            string ch = Constance.NORMAL + NormalChannel.ToString(); ;
-            //channelDict.AsParallel().ForAll(entry => Task.Run(() => RedisManager.Instance.UnSubscribe(entry.Key.ToString() + entry.Value, this.SessionID)));
+            string ch = Constance.NORMAL + NormalChannel.ToString();
             _ = RedisManager.Instance.UnSubscribe(ch, SessionID);
-            return true;
+            //channelDict.AsParallel().ForAll(entry => Task.Run(() => RedisManager.Instance.UnSubscribe(entry.Key.ToString() + entry.Value, this.SessionID)));
+
+            ch = Constance.GUILD + GuildChannel.ToString();
+            _ = RedisManager.Instance.UnSubscribe(ch, SessionID);            
         }
 
         public bool ReportMessage()

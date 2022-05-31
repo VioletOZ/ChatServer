@@ -30,9 +30,8 @@ namespace ChatServer
                     this.m_onRedisMessageHandler = new Action<RedisChannel, RedisValue>
                                                 ((channel, value) =>
                                                     {
-                                                        Console.WriteLine(value.ToString());
+                                                        
                                                         SendAsync(value.ToString(), null);
-
                                                     });
                 }
                 return this.m_onRedisMessageHandler;
@@ -131,7 +130,10 @@ namespace ChatServer
                     break;
 
                 case CHAT_COMMAND.CT_LOGOUT:
-                    m_ChatPlayer.LogOut(JsonSerializer.Deserialize<req_ChatLogout>(stream, new JsonSerializerOptions()));
+                    //m_ChatPlayer.LogOut(JsonSerializer.Deserialize<req_ChatLogout>(stream, new JsonSerializerOptions()));
+                    //정상 종료가 있을까?? 종료는 OnClose 로 넘긴다
+                    // 필요시에 종료 Code 와 Reason 작성.
+                    this.OnClose(null);
                     break;
 
                 case CHAT_COMMAND.CT_INFO:
@@ -158,7 +160,6 @@ namespace ChatServer
                     break;
 
                 case CHAT_COMMAND.CT_MESSAGE:
-                    
                     m_ChatPlayer.SendMessage(JsonSerializer.Deserialize<req_ChatMessage>(stream, new JsonSerializerOptions()));
                     //if (!m_ChatPlayer.SendMessage(message))
                         //SendAsync(RETURN_CODE.RC_FAIL.ToString(), null);
@@ -169,7 +170,7 @@ namespace ChatServer
                     break;
 
                 case CHAT_COMMAND.CT_GACHA_NOTICE:
-                    m_ChatPlayer.GaChaNotice(JsonSerializer.Deserialize<req_ChatGachaNotice>(stream, new JsonSerializerOptions()));
+                    m_ChatPlayer.GachaNotice(JsonSerializer.Deserialize<req_ChatGachaNotice>(stream, new JsonSerializerOptions()));
                     break;
 
                 default:
@@ -186,14 +187,7 @@ namespace ChatServer
 
             Console.WriteLine("OnClose : " + ID);
 
-            res_ChatMessage resChatMessage = new res_ChatMessage();
-            resChatMessage.ReturnCode = RETURN_CODE.RC_OK;
-            resChatMessage.ChatType = CHAT_TYPE.CT_SYSTEM;
-            resChatMessage.ChannelID = m_ChatPlayer.channelDict[CHAT_TYPE.CT_NORMAL];
-            resChatMessage.LogData = new ChatLogData();
-
-            Sessions.BroadcastAsync(m_ChatPlayer.Name + "님이 퇴장하셨습니다.", null);
-
+            m_ChatPlayer.LeaveAllChannel();
             CloseAsync();
             Console.WriteLine("Session Close Count : " + Sessions.Count);            
         }
@@ -233,7 +227,7 @@ namespace ChatServer
             // 길드가 있을경우 길드도 구독
             if (guildID > 0)
             {
-                // 길드UID를 채널번호로 지정 . 일단임시로
+                // 길드UID를 채널번호로 지정 . 
                 await m_ChatPlayer.EnterChannel(CHAT_TYPE.CT_GUILD, guildID, OnRedisMessageHandler);
             }
 
