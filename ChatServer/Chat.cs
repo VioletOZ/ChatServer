@@ -30,8 +30,8 @@ namespace ChatServer
                     this.m_onRedisMessageHandler = new Action<RedisChannel, RedisValue>
                                                 ((channel, value) =>
                                                     {
-                                                        string message = DateTime.Now.ToString() + ":" + value.ToString();
-                                                        SendAsync(message, null);
+                                                        Console.WriteLine(value.ToString());
+                                                        SendAsync(value.ToString(), null);
 
                                                     });
                 }
@@ -110,29 +110,70 @@ namespace ChatServer
             }
 
             MemoryStream stream = new MemoryStream(Encoding.UTF8.GetBytes(args.Data));
-            req_ChatMessage message = JsonSerializer.Deserialize<req_ChatMessage>(stream, options);
+            req_Command command = JsonSerializer.Deserialize<req_Command>(stream, options);
 
-            // 
-            switch (message.Command)
+            if (command == null)
             {
-                case CHAT_COMMAND.CT_CHAT:
-                    if (!m_ChatPlayer.SendMessage(message))
-                        SendAsync(RETURN_CODE.RC_FAIL.ToString(), null);
+                Console.WriteLine("Chat OnMessage Command Null");
+                return;
+            }
+
+            stream = new MemoryStream(Encoding.UTF8.GetBytes(args.Data));
+            
+            // 
+            switch (command.Command)
+            {
+                case CHAT_COMMAND.CT_LOGIN:
+                    break;
+
+                case CHAT_COMMAND.CT_RECONNECT:                    
+                    m_ChatPlayer.Reconnect(JsonSerializer.Deserialize<req_ChatReConnect>(stream, new JsonSerializerOptions()));
+                    break;
+
+                case CHAT_COMMAND.CT_LOGOUT:
+                    m_ChatPlayer.LogOut(JsonSerializer.Deserialize<req_ChatLogout>(stream, new JsonSerializerOptions()));
+                    break;
+
+                case CHAT_COMMAND.CT_INFO:
+                    m_ChatPlayer.ChannelInfo(JsonSerializer.Deserialize<req_ChatInfo>(stream, new JsonSerializerOptions()));
+                    break;
+
+                case CHAT_COMMAND.CT_GUILD_LOG:
+                    m_ChatPlayer.GuildChatLog(JsonSerializer.Deserialize<req_ChatGuildLog>(stream, new JsonSerializerOptions()));
                     break;
 
                 case CHAT_COMMAND.CT_CHANGE_CHANNEL:
-                    if(!await m_ChatPlayer.ChangeChannel(m_ChatPlayer.NormalChannel, OnRedisMessageHandler))
+                    if (!await m_ChatPlayer.ChangeChannel(JsonSerializer.Deserialize<req_ChatChangeChannel>(stream, new JsonSerializerOptions()), OnRedisMessageHandler))
                         SendAsync(RETURN_CODE.RC_FAIL.ToString(), null);
                     break;
 
-                case CHAT_COMMAND.CT_ENTER_GUILD_CHANNEL:
-                    if (!m_ChatPlayer.EnterGuildChannel(message.ChatType))
+                case CHAT_COMMAND.CT_ENTER_CHANNEL:
+                    req_ChatEnterChannel message = JsonSerializer.Deserialize<req_ChatEnterChannel>(stream, new JsonSerializerOptions());
+                    if (!await m_ChatPlayer.EnterChannel(message.ChatType, message.ChannelID, OnRedisMessageHandler))
                         SendAsync(RETURN_CODE.RC_FAIL.ToString(), null);
                     break;
 
-                case CHAT_COMMAND.CT_REPORT:
-                    m_ChatPlayer.ReportMessage();
-                    SendAsync("Report", null);
+                case CHAT_COMMAND.CT_LEAVE_CHANNEL:
+                    m_ChatPlayer.LeaveChannel(JsonSerializer.Deserialize<req_ChatLeaveChannel>(stream, new JsonSerializerOptions()));
+                    break;
+
+                case CHAT_COMMAND.CT_MESSAGE:
+                    
+                    m_ChatPlayer.SendMessage(JsonSerializer.Deserialize<req_ChatMessage>(stream, new JsonSerializerOptions()));
+                    //if (!m_ChatPlayer.SendMessage(message))
+                        //SendAsync(RETURN_CODE.RC_FAIL.ToString(), null);
+                    break;
+
+                case CHAT_COMMAND.CT_LEADER_CHANGE:
+                    m_ChatPlayer.LeaderChange(JsonSerializer.Deserialize<req_ChatLeaderChange>(stream, new JsonSerializerOptions()));
+                    break;
+
+                case CHAT_COMMAND.CT_GACHA_NOTICE:
+                    m_ChatPlayer.GaChaNotice(JsonSerializer.Deserialize<req_ChatGachaNotice>(stream, new JsonSerializerOptions()));
+                    break;
+
+                default:
+                    Console.WriteLine("Request Command Error : " + command.Command);
                     break;
             }
         }

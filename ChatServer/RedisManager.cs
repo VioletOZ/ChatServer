@@ -15,7 +15,7 @@ namespace ChatServer
 {
     class RedisManager
     {
-        private static volatile RedisManager _instance;        
+        private static volatile RedisManager _instance;
         private static object _syncRoot = new Object();
         public static RedisManager Instance
         {
@@ -38,7 +38,7 @@ namespace ChatServer
         {
             Converters =
                 {
-                    new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)
+                    new JsonStringEnumConverter()
                 }
         };
 
@@ -147,7 +147,7 @@ namespace ChatServer
 
             string json = JsonSerializer.Serialize<res_ChatMessage>(resMessage, options);
 
-            _messageQueue.Add(message.LogData);
+            //_messageQueue.Add(message.LogData);
             //string channel = message.Type + message.Channel;
             //await _subscriber.PublishAsync(channel, message.Text);
             await _subscriber.PublishAsync(channel, json);

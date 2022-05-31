@@ -21,7 +21,7 @@ namespace ChatServer
         public int EmoticonNum { get; set; }
         public int CharacterID { get; set; }
         public int ItemID { get; set; }
-        public string text { get; set; }
+        public string Text { get; set; }
         
     }
 }
