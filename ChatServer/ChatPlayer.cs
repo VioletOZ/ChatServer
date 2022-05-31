@@ -202,22 +202,30 @@ namespace ChatServer
             return true;
         }
 
-        public void LeaveChannel(req_ChatLeaveChannel message)
+        public async Task<bool> LeaveChannel(req_ChatLeaveChannel message)
         {
             if (message == null)
             {
                 Console.WriteLine("ChatPlayer LeaveCHannel Message Null");
-                return;
+                return false;
             }
+
+            await RedisManager.Instance.UnSubscribe(GetGuildChannel(), userData);
+
+            return true;
         }
 
-        public void LeaderChange(req_ChatLeaderChange message)
+        public async Task<bool> LeaderChange(req_ChatLeaderChange message)
         {
             if (message == null)
             {
                 Console.WriteLine("ChatPlayer LeaderChange Message Null");
-                return;
+                return false;
             }
+
+            await Task.Run(() => userData.CharacterID = message.LeaderCharacterID);
+
+            return true;
         }
 
         public void GachaNotice(req_ChatGachaNotice message)

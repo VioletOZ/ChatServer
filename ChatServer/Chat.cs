@@ -218,11 +218,20 @@ namespace ChatServer
                     enterChannel.Command = CHAT_COMMAND.CT_ENTER_CHANNEL;
                     enterChannel.ChannelID = enterMessage.ChannelID;                    
                     enterChannel.ChannelUserDataList = RedisManager.Instance.GetUsersByChannel(channel);
+
                     SendAsync(JsonSerializer.Serialize<res_ChatEnterChannel>(enterChannel, options), null);
                     break;
 
                 case CHAT_COMMAND.CT_LEAVE_CHANNEL:
-                    m_ChatPlayer.LeaveChannel(JsonSerializer.Deserialize<req_ChatLeaveChannel>(stream, new JsonSerializerOptions()));
+                    res_ChatLeaveChannel leaveChannel = new res_ChatLeaveChannel();
+                    if (!await m_ChatPlayer.LeaveChannel(JsonSerializer.Deserialize<req_ChatLeaveChannel>(stream, new JsonSerializerOptions())))
+                        leaveChannel.ReturnCode = RETURN_CODE.RC_FAIL;
+                    else
+                        leaveChannel.ReturnCode = RETURN_CODE.RC_OK;
+
+                    leaveChannel.Command = CHAT_COMMAND.CT_LEAVE_CHANNEL;
+
+                    SendAsync(JsonSerializer.Serialize<res_ChatLeaveChannel>(leaveChannel, options), null);
                     break;
 
                 case CHAT_COMMAND.CT_MESSAGE:
@@ -231,13 +240,22 @@ namespace ChatServer
                     break;
 
                 case CHAT_COMMAND.CT_LEADER_CHANGE:
-                    m_ChatPlayer.LeaderChange(JsonSerializer.Deserialize<req_ChatLeaderChange>(stream, new JsonSerializerOptions()));
+                    req_ChatLeaderChange leaderMessage = JsonSerializer.Deserialize<req_ChatLeaderChange>(stream, new JsonSerializerOptions());
+                    res_ChatLeaderChange leaderChange = new res_ChatLeaderChange();
+                    if (!await m_ChatPlayer.LeaderChange(leaderMessage))
+                        leaderChange.ReturnCode = RETURN_CODE.RC_FAIL;
+                    else
+                        leaderChange.ReturnCode = RETURN_CODE.RC_OK;
+
+                    leaderChange.Command = CHAT_COMMAND.CT_LEADER_CHANGE;
+                    leaderChange.LeaderCharacterID = leaderMessage.LeaderCharacterID;
+
+                    SendAsync(JsonSerializer.Serialize<res_ChatLeaderChange>(leaderChange, options), null);
                     break;
 
                 case CHAT_COMMAND.CT_GACHA_NOTICE:
                     req_ChatGachaNotice gaChamessage = JsonSerializer.Deserialize<req_ChatGachaNotice>(stream, new JsonSerializerOptions());
                     m_ChatPlayer.GachaNotice(gaChamessage);
-
                     
                     res_ChatGachaNotice gachaNotice = new res_ChatGachaNotice();
                     gachaNotice.Command = CHAT_COMMAND.CT_GACHA_NOTICE;
@@ -246,7 +264,10 @@ namespace ChatServer
                     gachaNotice.ItemID = gaChamessage.ItemID;
                     gachaNotice.CharID = gaChamessage.CharID;
 
-                    Sessions.BroadcastAsync(JsonSerializer.Serialize<res_ChatGachaNotice>(gachaNotice, options), null);
+                    //Sessions.BroadcastAsync(JsonSerializer.Serialize<res_ChatGachaNotice>(gachaNotice, options), null);
+
+                    RedisManager.Instance.GachaPublish(m_ChatPlayer.GetNormalChannel(), gachaNotice);
+                    RedisManager.Instance.GachaPublish(m_ChatPlayer.GetGuildChannel(), gachaNotice);
                     break;
 
                 default:
@@ -262,7 +283,15 @@ namespace ChatServer
             // 지금은 일단 그냥 접속종료
 
             Console.WriteLine("OnClose : " + ID);
-            m_ChatPlayer.LeaveAllChannel();
+            try
+            {
+                // 
+                m_ChatPlayer.LeaveAllChannel();
+            }
+            catch 
+            {
+                
+            }
 
             CloseAsync();
             Console.WriteLine("Session Close Count : " + Sessions.Count);            

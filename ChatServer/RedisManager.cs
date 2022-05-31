@@ -174,6 +174,11 @@ namespace ChatServer
             _ = _subscriber.PublishAsync(channel, message);
         }
 
+        public void GachaPublish(string channel, res_ChatGachaNotice notiMessage)
+        {
+            _ = _subscriber.PublishAsync(channel, JsonSerializer.Serialize<res_ChatGachaNotice>(notiMessage, options));
+        }
+
         public async Task UnSubscribe(string channel, ChatUserData user)
         {
             await _subscriber.UnsubscribeAsync(channel);

@@ -180,7 +180,6 @@ namespace ChatServer
     {
         public CHAT_COMMAND Command { get; set; }
         public RETURN_CODE ReturnCode { get; set; }
-
         public int LeaderCharacterID { get; set; }
     }
 }
