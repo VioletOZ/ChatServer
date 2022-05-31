@@ -66,19 +66,19 @@ namespace ChatServer
             switch (message.ChatType)
             {
                 case CHAT_TYPE.CT_NORMAL:
-                    _ = Task.Run(() => RedisManager.Instance.Publish(GetNormalChannel(), message));
+                    await Task.Run(() => RedisManager.Instance.Publish(GetNormalChannel(), message));
                     break;
 
                 case CHAT_TYPE.CT_GUILD:
-                    _ = Task.Run(() => RedisManager.Instance.Publish(GetGuildChannel(), message));
+                    await Task.Run(() => RedisManager.Instance.Publish(GetGuildChannel(), message));
                     break;
 
                 case CHAT_TYPE.CT_SYSTEM:
-                    _ =  Task.Run(() => RedisManager .Instance.Publish(Constance.SYSTEM, message));
+                    await Task.Run(() => RedisManager .Instance.Publish(Constance.SYSTEM, message));
                     break;
 
                 case CHAT_TYPE.CT_GM_NOTICE:
-                    _ = Task.Run(() => RedisManager .Instance.Publish(Constance.GM_NOTICE, message));
+                    await Task.Run(() => RedisManager .Instance.Publish(Constance.GM_NOTICE, message));
                     break;
             }
         }
@@ -95,7 +95,7 @@ namespace ChatServer
             //string temp = Channels[channel].Dequeue();
         }
 
-        public  async void Reconnect(req_ChatReConnect message)
+        public  void Reconnect(req_ChatReConnect message)
         {
             if (message == null)
             {
@@ -104,12 +104,12 @@ namespace ChatServer
             }
         }
         
-        public async void LogOut(req_ChatLogout message)
+        public void LogOut(req_ChatLogout message)
         {
 
         }
 
-        public async void ChannelInfo(req_ChatInfo message)
+        public void ChannelInfo(req_ChatInfo message)
         {
             if (message == null)
             {
@@ -134,7 +134,7 @@ namespace ChatServer
             }
         }
 
-        public async void GuildChatLog(req_ChatGuildLog message)
+        public void GuildChatLog(req_ChatGuildLog message)
         {
             if (message == null)
             {
@@ -192,7 +192,6 @@ namespace ChatServer
                     ch = Constance.GM_NOTICE;
                     break;
             }
-            
 
             Console.WriteLine("EnterChannel : " + ch);
             await RedisManager.Instance.SubscribeAction(ch, userData, action);
@@ -203,7 +202,7 @@ namespace ChatServer
             return true;
         }
 
-        public async void LeaveChannel(req_ChatLeaveChannel message)
+        public void LeaveChannel(req_ChatLeaveChannel message)
         {
             if (message == null)
             {
@@ -212,7 +211,7 @@ namespace ChatServer
             }
         }
 
-        public async void LeaderChange(req_ChatLeaderChange message)
+        public void LeaderChange(req_ChatLeaderChange message)
         {
             if (message == null)
             {
@@ -221,7 +220,7 @@ namespace ChatServer
             }
         }
 
-        public async void GachaNotice(req_ChatGachaNotice message)
+        public void GachaNotice(req_ChatGachaNotice message)
         {
             if (message == null)
             {

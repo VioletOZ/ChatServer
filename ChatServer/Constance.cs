@@ -27,17 +27,17 @@ namespace ChatServer
     
     public enum CHAT_COMMAND
     {
-        CT_LOGIN = 0,                                           // 로그인
-        CT_RECONNECT,                                           // 재접속
-        CT_LOGOUT,                                              // 로그아웃
-        CT_INFO,                                                // 채팅채널에 유저정보
-        CT_GUILD_LOG,                                           // 길드 채팅로그
-        CT_CHANGE_CHANNEL,                                      // 채널 변경
-        CT_ENTER_CHANNEL,                                       // 채널 입장 (길드만 일반채널은 변경만가능)
-        CT_LEAVE_CHANNEL,                                       // 채널 나가기(길드탈퇴시)
-        CT_MESSAGE,                                             // 채팅
-        CT_LEADER_CHANGE,                                       // 대표 캐릭터 변경
-        CT_GACHA_NOTICE,                                        // 가챠 노티 
+        CT_LOGIN = 0,                                               // 로그인
+        CT_RECONNECT = 1,                                           // 재접속
+        CT_LOGOUT = 2,                                              // 로그아웃
+        CT_INFO = 3,                                                // 채팅채널에 유저정보
+        CT_GUILD_LOG = 4,                                           // 길드 채팅로그
+        CT_CHANGE_CHANNEL = 5,                                      // 채널 변경
+        CT_ENTER_CHANNEL = 6,                                       // 채널 입장 (길드만 일반채널은 변경만가능)
+        CT_LEAVE_CHANNEL = 7,                                       // 채널 나가기(길드탈퇴시)
+        CT_MESSAGE = 8,                                             // 채팅
+        CT_LEADER_CHANGE = 9,                                       // 대표 캐릭터 변경
+        CT_GACHA_NOTICE = 10,                                       // 가챠 노티 
     }
 
     public enum CONNECT_STATE

@@ -198,7 +198,16 @@ namespace ChatServer
 
         public List<ChatUserData> GetUsersByChannel(string channel)
         {
-            return _subChannelDict[channel];
+            try
+            {
+                return _subChannelDict[channel];
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("RedisManager GetUserByChannel subChannelDict Error : " + e.Message);
+                return null;
+            }
+
         }
 
         public async Task GetUserHash(string userUID)

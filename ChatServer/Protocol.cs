@@ -116,6 +116,7 @@ namespace ChatServer
     {
         public CHAT_COMMAND Command { get; set; }
         public RETURN_CODE ReturnCode { get; set; }
+        public CHAT_TYPE ChatType {get; set;}
         public int ChannelID { get; set; }
         public List<ChatUserData> ChannelUserDataList { get; set; }
     }
