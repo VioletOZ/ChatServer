@@ -47,7 +47,7 @@ namespace ChatServer
         private string _env { get; }
 
         private ConnectionMultiplexer _multiplexer = null;
-        private Dictionary<string, List<string>> _subChannelDict = new Dictionary<string, List<string>>(); // 구독중인 채널, Client Session
+        private Dictionary<string, List<ChatUserData>> _subChannelDict = new Dictionary<string, List<ChatUserData>>(); // 구독중인 채널, Client Session
         private MessageQueue _messageQueue = new MessageQueue();
 
         public RedisManager()
@@ -88,23 +88,36 @@ namespace ChatServer
             return true;
         }
 
-        public async Task<bool> SubscribeAction(string channel, Action<RedisChannel, RedisValue> ac)
+        public async Task<bool> SubscribeAction(string channel, ChatUserData user, Action<RedisChannel, RedisValue> ac)
         {
             await _multiplexer.GetSubscriber().SubscribeAsync(channel, ac);
+
+            if (!_subChannelDict.ContainsKey(channel))
+                _subChannelDict.Add(channel, new List<ChatUserData>());
+
+            foreach (var d in _subChannelDict[channel])
+            {
+                if (d.UserUID == user.UserUID)
+                    return false;
+            }
+
+            _subChannelDict[channel].Add(user);
+
             return true;
         }
+
         // Redis Subscribe - 구독하고 있는 채널에 Pub가 오면 구독중인 Client에 메시지 전달
-        public bool Subscribe(string channel, string session=null)
+        public bool Subscribe(string channel, ChatUserData user = null)
         {
             if (string.IsNullOrEmpty(channel)) 
                 return false;
 
             if (!_subChannelDict.ContainsKey(channel))
             {
-                _subChannelDict.Add(channel, new List<string>());
+                _subChannelDict.Add(channel, new List<ChatUserData>());
             }
 
-            _subChannelDict[channel].Add(session); // 구독중인 채널 추가
+            _subChannelDict[channel].Add(user); // 구독중인 채널 추가
 
             Console.WriteLine("Sub Channel : " + channel);
 
@@ -161,14 +174,31 @@ namespace ChatServer
             _ = _subscriber.PublishAsync(channel, message);
         }
 
-        public async Task UnSubscribe(string channel, string session)
+        public async Task UnSubscribe(string channel, ChatUserData user)
         {
             await _subscriber.UnsubscribeAsync(channel);
+
+            if (_subChannelDict.ContainsKey(channel))
+            {
+                for( int i = 0; i < _subChannelDict[channel].Count; i++)
+                {
+                    if (_subChannelDict[channel][i].UserUID == user.UserUID)
+                    {
+                        _subChannelDict[channel].RemoveAt(i);
+                        return;
+                    }
+                }
+            }
         }
 
         public async Task UnSubscribeAll()
         {
             await _subscriber.UnsubscribeAllAsync();
+        }
+
+        public List<ChatUserData> GetUsersByChannel(string channel)
+        {
+            return _subChannelDict[channel];
         }
 
         public async Task GetUserHash(string userUID)

@@ -22,16 +22,21 @@ namespace ChatServer
 
         public int NormalChannel { get; set; }              // 쓰기편하려고.. 
         public int GuildChannel { get; set; }
-        
+
+        public ChatUserData userData = new ChatUserData();
         // 1:1 대화등의 메시지 저장용
         public Dictionary<string, BlockingCollection<string>> WhisperMessage { get; set; }
         
 
-        public ChatPlayer(string sessionId, string uid, string name)
+        public ChatPlayer(string sessionId, string uid, string name, int charId)
         {
             this.SessionID = sessionId;
             this.UID = uid;
             this.Name = name;
+
+            this.userData.UserUID = uid;
+            this.userData.UserName = name;
+            this.userData.CharacterID = charId;
         }
 
         public void SetPlayer(string sid, string uid, string name, string gid)
@@ -58,27 +63,22 @@ namespace ChatServer
                 return;
             }
 
-            string ch;
             switch (message.ChatType)
             {
                 case CHAT_TYPE.CT_NORMAL:
-                     ch = Constance.NORMAL + NormalChannel;
-                    _ = Task.Run(() => RedisManager.Instance.Publish(ch, message));
+                    _ = Task.Run(() => RedisManager.Instance.Publish(GetNormalChannel(), message));
                     break;
 
                 case CHAT_TYPE.CT_GUILD:
-                    ch = Constance.GUILD + GuildChannel;
-                    _ = Task.Run(() => RedisManager.Instance.Publish(ch, message));
+                    _ = Task.Run(() => RedisManager.Instance.Publish(GetGuildChannel(), message));
                     break;
 
                 case CHAT_TYPE.CT_SYSTEM:
-                    ch = Constance.SYSTEM;
-                    _ =  Task.Run(() => RedisManager .Instance.Publish(ch, message));
+                    _ =  Task.Run(() => RedisManager .Instance.Publish(Constance.SYSTEM, message));
                     break;
 
                 case CHAT_TYPE.CT_GM_NOTICE:
-                    ch = Constance.GM_NOTICE;
-                    _ = Task.Run(() => RedisManager .Instance.Publish(ch, message));
+                    _ = Task.Run(() => RedisManager .Instance.Publish(Constance.GM_NOTICE, message));
                     break;
             }
         }
@@ -116,6 +116,22 @@ namespace ChatServer
                 Console.WriteLine("ChatPlayer ChannelInfo Message Null");
                 return;
             }
+
+            switch (message.ChatType)
+            {
+                case CHAT_TYPE.CT_NORMAL:
+
+                    break;
+
+                case CHAT_TYPE.CT_GUILD:
+                    break;
+
+                case CHAT_TYPE.CT_MAX:
+                    break;
+
+                default:
+                    break;
+            }
         }
 
         public async void GuildChatLog(req_ChatGuildLog message)
@@ -128,7 +144,7 @@ namespace ChatServer
         }
 
         // 채널변경은 일반 채널밖에 되지않음.
-        public async Task<bool> ChangeChannel(req_ChatChangeChannel message, Action<RedisChannel, RedisValue> action)
+        public async Task<bool> ChangeChannel(req_ChatChangeChannel message, ChatUserData userData, Action<RedisChannel, RedisValue> action)
         {
             // 변경 전 채널
             int beforeChannel = NormalChannel;
@@ -138,7 +154,7 @@ namespace ChatServer
 
             // 구독중인 채널 삭제하고
             string ch = Constance.NORMAL + beforeChannel.ToString();
-            await RedisManager.Instance.UnSubscribe(ch, SessionID);
+            await RedisManager.Instance.UnSubscribe(ch, userData);
             NormalChannel = message.ChannelID;
 
             // 다시 구독요청
@@ -179,7 +195,7 @@ namespace ChatServer
             
 
             Console.WriteLine("EnterChannel : " + ch);
-            await RedisManager.Instance.SubscribeAction(ch, action);
+            await RedisManager.Instance.SubscribeAction(ch, userData, action);
 
             //string message = Name + " 님이 입장하셨습니다.";
             //RedisManager.Instance.ForcePublish(ch, message);
@@ -215,14 +231,14 @@ namespace ChatServer
         }
 
 
-        public void LeaveAllChannel()
+        public async void LeaveAllChannel()
         {
             string ch = Constance.NORMAL + NormalChannel.ToString();
-            _ = RedisManager.Instance.UnSubscribe(ch, SessionID);
+            await RedisManager.Instance.UnSubscribe(ch, userData);
             //channelDict.AsParallel().ForAll(entry => Task.Run(() => RedisManager.Instance.UnSubscribe(entry.Key.ToString() + entry.Value, this.SessionID)));
 
             ch = Constance.GUILD + GuildChannel.ToString();
-            _ = RedisManager.Instance.UnSubscribe(ch, SessionID);            
+            await RedisManager.Instance.UnSubscribe(ch, userData);
         }
 
         public bool ReportMessage()
@@ -231,6 +247,16 @@ namespace ChatServer
             return true;
         }
 
-        
+        public string GetNormalChannel()
+        {
+            return Constance.NORMAL + NormalChannel;
+        }
+
+        public string GetGuildChannel()
+        {
+            return Constance.GUILD + GuildChannel;
+        }
+
+
     }
 }
