@@ -254,15 +254,15 @@ namespace ChatServer
                     break;
 
                 case CHAT_COMMAND.CT_GACHA_NOTICE:
-                    req_ChatGachaNotice gaChamessage = JsonSerializer.Deserialize<req_ChatGachaNotice>(stream, new JsonSerializerOptions());
-                    m_ChatPlayer.GachaNotice(gaChamessage);
+                    req_ChatGachaNotice gachamessage = JsonSerializer.Deserialize<req_ChatGachaNotice>(stream, new JsonSerializerOptions());
+                    m_ChatPlayer.GachaNotice(gachamessage);
                     
                     res_ChatGachaNotice gachaNotice = new res_ChatGachaNotice();
                     gachaNotice.Command = CHAT_COMMAND.CT_GACHA_NOTICE;
                     gachaNotice.ReturnCode = RETURN_CODE.RC_OK;
                     gachaNotice.UserName = m_ChatPlayer.Name;
-                    gachaNotice.ItemIDList = gaChamessage.ItemIDList;
-                    gachaNotice.ItemIDList = gaChamessage.ItemIDList;
+                    gachaNotice.ItemIDList = gachamessage.ItemIDList;
+                    gachaNotice.CharIDList = gachamessage.CharIDList;
 
                     //Sessions.BroadcastAsync(JsonSerializer.Serialize<res_ChatGachaNotice>(gachaNotice, options), null);
 
