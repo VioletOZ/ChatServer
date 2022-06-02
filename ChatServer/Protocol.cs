@@ -152,13 +152,13 @@ namespace ChatServer
         public ChatLogData LogData { get; set; }
     }
 
-    // 가챠 노티 응답받기
+    // 가챠 노티
     public class req_ChatGachaNotice
     {
         public CHAT_COMMAND Command { get; set; }
         public string UserName { get; set; }
-        public int ItemID { get; set; }
-        public int CharID { get; set; }
+        public List<int> ItemIDList { get; set; }
+        public List<int> CharIDList { get; set; }
     }
 
     public class res_ChatGachaNotice
@@ -166,8 +166,8 @@ namespace ChatServer
         public CHAT_COMMAND Command { get; set; }
         public RETURN_CODE ReturnCode { get; set; }
         public string UserName { get; set; }
-        public int ItemID { get; set; }
-        public int CharID { get; set; }
+        public List<int> ItemIDList { get; set; }
+        public List<int> CharIDList { get; set; }
     }
 
     public class req_ChatLeaderChange

@@ -261,8 +261,8 @@ namespace ChatServer
                     gachaNotice.Command = CHAT_COMMAND.CT_GACHA_NOTICE;
                     gachaNotice.ReturnCode = RETURN_CODE.RC_OK;
                     gachaNotice.UserName = m_ChatPlayer.Name;
-                    gachaNotice.ItemID = gaChamessage.ItemID;
-                    gachaNotice.CharID = gaChamessage.CharID;
+                    gachaNotice.ItemIDList = gaChamessage.ItemIDList;
+                    gachaNotice.ItemIDList = gaChamessage.ItemIDList;
 
                     //Sessions.BroadcastAsync(JsonSerializer.Serialize<res_ChatGachaNotice>(gachaNotice, options), null);
 
