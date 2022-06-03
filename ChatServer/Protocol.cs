@@ -33,7 +33,7 @@ namespace ChatServer
     {
         public CHAT_COMMAND Command { get; set; }
         public string SessionID { get; set; }
-        public string UserUID { get; set; }
+        public long UserUID { get; set; }
     }
 
     public class res_ChatReConnect
@@ -47,7 +47,7 @@ namespace ChatServer
     {
         public CHAT_COMMAND Command { get; set; }
         public string SessionID { get; set; }
-        public string UserUID { get; set; }
+        public long UserUID { get; set; }
     }
 
     public class res_ChatLogout
@@ -116,21 +116,23 @@ namespace ChatServer
     {
         public CHAT_COMMAND Command { get; set; }
         public RETURN_CODE ReturnCode { get; set; }
-        // 채널 타입은 필요없다 입장요청은 길드만 가능.
+        public CHAT_TYPE ChatType { get; set; }
         public int ChannelID { get; set; }
         public List<ChatUserData> ChannelUserDataList { get; set; }
     }
 
-    // 채널 나가기 (길드탈퇴시)
+    // 채널 나가기
     public class req_ChatLeaveChannel
     {
         public CHAT_COMMAND Command { get; set; }
+        public CHAT_TYPE ChatType { get; set; }
         // 길드마스터일경우나 탈퇴시 후처리가 필요할 경우 추가 데이터 요청 해야함
     }
     public class res_ChatLeaveChannel
     {
         public CHAT_COMMAND Command { get; set; }
         public RETURN_CODE ReturnCode { get; set; }
+        public CHAT_TYPE ChatType { get; set; }
         // 길드마스터일경우나 탈퇴시 후처리가 필요할 경우 추가 데이터 전송 해야함
     }
 
@@ -143,6 +145,7 @@ namespace ChatServer
         public int ChannelID { get; set; }
         public ChatLogData LogData { get; set; }
     }
+
     public class res_ChatMessage
     {
         public CHAT_COMMAND Command { get; set; }
@@ -180,6 +183,35 @@ namespace ChatServer
     {
         public CHAT_COMMAND Command { get; set; }
         public RETURN_CODE ReturnCode { get; set; }
-        public int LeaderCharacterID { get; set; }
+    }
+
+    // 채널 입장시 내 정보 알림
+    public class res_ChatEnterUser
+    {
+        public CHAT_COMMAND Command { get; set; }
+        public RETURN_CODE ReturnCode { get; set; }
+        public CHAT_TYPE ChatType { get; set; }
+        public ChatUserData UserData { get; set; }
+    }
+
+    // 채널 퇴장시 내정보 알림
+    public class res_ChatLeaveUser
+    {
+        public CHAT_COMMAND Command { get; set; }
+        public RETURN_CODE ReturnCode { get; set; }
+        public CHAT_TYPE ChatType { get; set; }
+        public long UserUID { get; set; }
+    }
+
+    // 일반 채널 로그 안받기
+    public class req_ChatReceiveEnd
+    {
+        public CHAT_COMMAND Command { get; set; }
+    }
+
+    public class res_ChatReceiveEnd
+    {
+        public CHAT_COMMAND Command { get; set; }
+        public RETURN_CODE ReturnCode { get; set; }
     }
 }

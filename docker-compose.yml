@@ -8,6 +8,7 @@ services:
       ports:
         - "9000:9000"
       environment:
+        - ServerPort=9000
         - RedisConnection=chat_redis
       volumes:
         - "../data/ChatServer:/usr/local/data"

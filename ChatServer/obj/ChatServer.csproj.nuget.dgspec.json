@@ -48,6 +48,10 @@
               "target": "Package",
               "version": "[2.5.61, )"
             },
+            "StackExchange.Redis.MultiplexerPool": {
+              "target": "Package",
+              "version": "[1.0.2, )"
+            },
             "System.Text.Json": {
               "target": "Package",
               "version": "[6.0.4, )"

@@ -12,12 +12,13 @@ namespace ChatServer
     {
         public static string Serialize<T>(this T obj) 
         { 
-            return JsonSerializer.Serialize(obj); 
+            return JsonSerializer.Serialize<T>(obj, new JsonSerializerOptions()); 
         }
 
         public static object Deserialize<T>(Stream obj)
         {
             return JsonSerializer.Deserialize<T>(obj);
         }
+
     }
 }

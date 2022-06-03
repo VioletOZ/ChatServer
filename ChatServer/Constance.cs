@@ -10,7 +10,8 @@ namespace ChatServer
     {
         RC_OK = 0,                                              // 성공
         RC_FAIL = 1,                                            // 실패
-        RC_CHAT_LOGIN_FAIL = 16                                 // 챗서버 접속 실패
+        RC_CHAT_LOGIN_FAIL = 16,                                // 챗서버 접속 실패
+        RC_CHAT_DUPLICATE_CHANNEL = 100                         // 중복된 채널 접속요청
     }
 
     public enum CHAT_TYPE
@@ -32,12 +33,18 @@ namespace ChatServer
         CT_LOGOUT = 2,                                              // 로그아웃
         CT_INFO = 3,                                                // 채팅채널에 유저정보
         CT_GUILD_LOG = 4,                                           // 길드 채팅로그
-        CT_CHANGE_CHANNEL = 5,                                      // 채널 변경
-        CT_ENTER_CHANNEL = 6,                                       // 채널 입장 (길드만 일반채널은 변경만가능)
-        CT_LEAVE_CHANNEL = 7,                                       // 채널 나가기(길드탈퇴시)
-        CT_MESSAGE = 8,                                             // 채팅
-        CT_LEADER_CHANGE = 9,                                       // 대표 캐릭터 변경
-        CT_GACHA_NOTICE = 10,                                       // 가챠 노티 
+        CT_LEADER_CHANGE = 5,                                       // 대표 캐릭터 변경
+
+
+        CT_MESSAGE = 10,                                            // 채팅
+        CT_CHANNEL_CHANGE = 11,                                      // 채널 변경
+        CT_CHANNEL_ENTER = 12,                                     // 채널 입장 (길드만 일반채널은 변경만가능)
+        CT_CHANNEL_LEAVE = 13,                                      // 채널 나가기(길드탈퇴시)
+        CT_CHANNEL_ENTER_USER = 14,                                 // 채널 유저 상태
+        CT_CHANNEL_LEAVE_USER = 15,                                 // 채널 유저 상태
+        CT_CHANNEL_RECEIVE_END = 16,                                // 로그 안받기
+
+        CT_NOTICE_GACHA = 100,                                      // 가챠 노티 
     }
 
     public enum CONNECT_STATE
@@ -55,11 +62,14 @@ namespace ChatServer
         public const int PORT = 9000;
         public const int CHANNEL_PLAYER_MAX = 50;               // 채널당 최대인원 임시값
         public const int CHANNEL_MAX = 9999;                    // 최대 채널갯수 임시값
+        public const int POOL_SIZE = 10000;
 
         public const string NORMAL = "NORMAL";
         public const string GUILD = "GUILD";
         public const string SYSTEM = "SYSTEM";
         public const string GM_NOTICE = "GM_NOTICE";
+
+        public static int POSSIBLE_CHANNEL_NUMBER = 1;
     }
-    
+
 }

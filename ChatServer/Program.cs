@@ -4,6 +4,7 @@ using System.Net.Sockets;
 using WebSocketSharp;
 using WebSocketSharp.Server;
 using StackExchange.Redis;
+using StackExchange.Redis.MultiplexerPool;
 
 using System.Threading;
 using System.Threading.Tasks;

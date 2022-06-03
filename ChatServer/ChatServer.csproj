@@ -14,6 +14,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.11.1" />
     <PackageReference Include="StackExchange.Redis" Version="2.5.61" />
+    <PackageReference Include="StackExchange.Redis.MultiplexerPool" Version="1.0.2" />
     <PackageReference Include="System.Text.Json" Version="6.0.4" />
     <PackageReference Include="websocket-sharp-dotnet-core" Version="1.0.2" />
   </ItemGroup>
