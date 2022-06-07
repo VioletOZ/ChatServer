@@ -184,7 +184,7 @@ namespace ChatServer
                 HashEntry[] hash =
                 {
                     // 한국시간으로 변경.
-                    new HashEntry(DateTime.Now.ToUniversalTime().AddHours(9).ToString(format: "yyyyMMddHHmmss"), log)
+                    new HashEntry(DateTime.Now.ToString(format: "yyyyMMddHHmmss"), log)
                     //new HashEntry("data", message.LogData.UserName + message.LogData.Text)
                 };
 
