@@ -260,6 +260,8 @@ namespace ChatServer
             if (GuildChannel > 0)
                 await RedisManager.Instance.UnSubscribe(SessionState, GetGuildChannel(), UserData.UserUID);
 
+            await RedisManager.Instance.UnSubscribe(SessionState, Constance.SYSTEM, UserData.UserUID);
+            await RedisManager.Instance.UnSubscribe(SessionState, Constance.GM_NOTICE, UserData.UserUID);
         }
 
         public async Task<bool> EnterUserChannel(CHAT_TYPE type)
