@@ -85,7 +85,7 @@ namespace ChatServer
     {
         public CHAT_COMMAND Command { get; set; }
         public RETURN_CODE ReturnCode { get; set; }
-        public List<ChatLogData> GuildLogDataList { get; set; }
+        public List<ChatGuildLogData> GuildLogDataList { get; set; }
 
     }
 

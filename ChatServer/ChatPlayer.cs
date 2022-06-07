@@ -20,7 +20,7 @@ namespace ChatServer
 
         public int NormalChannel { get; set; }              // 쓰기편하려고.. 
         public int GuildChannel { get; set; }
-
+        public DateTime LoginTime;
         public ChatUserData UserData = new ChatUserData();
         public SessionState SessionState = new SessionState();
         
@@ -34,6 +34,7 @@ namespace ChatServer
             this.UserData.UserUID = uid;
             this.UserData.UserName = name;
             this.UserData.CharacterID = charId;
+            this.LoginTime = DateTime.Now;
 
             this.SessionState.subscriber = RedisManager.Instance.GetSubscriberAsync().Result;
             this.SessionState.db = RedisManager.Instance.GetDatabaseAsync().Result;
@@ -115,7 +116,6 @@ namespace ChatServer
             switch (message.ChatType)
             {
                 case CHAT_TYPE.CT_NORMAL:
-
                     break;
 
                 case CHAT_TYPE.CT_GUILD:
@@ -129,9 +129,9 @@ namespace ChatServer
             }
         }
 
-        public async Task<List<ChatLogData>> GetGuildLog()
+        public async Task<List<ChatGuildLogData>> GetGuildLog()
         {
-            return await RedisManager.Instance.GetGuildLogData(SessionState, GetGuildChannel());
+            return await RedisManager.Instance.GetGuildLogData(SessionState, GetGuildChannel(), LoginTime);
         }
 
         // 채널변경은 일반 채널밖에 되지않음.
@@ -172,11 +172,15 @@ namespace ChatServer
                 case CHAT_TYPE.CT_NORMAL:
                     NormalChannel = channelNum;
                     ch = GetNormalChannel();
+                    if (!await EnterUserChannel(type))
+                        Console.WriteLine("ChatPlayer Normal EnterUserChannel Fail : " + UserData.UserUID);
                     break;
 
                 case CHAT_TYPE.CT_GUILD:
                     GuildChannel = channelNum;
                     ch = GetGuildChannel();
+                    if (!await EnterUserChannel(type))
+                        Console.WriteLine("ChatPlayer Guild EnterUserChannel Fail : " + UserData.UserUID);
                     break;
                 case CHAT_TYPE.CT_SYSTEM:
                     ch = Constance.SYSTEM;
@@ -185,10 +189,6 @@ namespace ChatServer
                     ch = Constance.GM_NOTICE;
                     break;
             }
-
-            //await UserStateChannel(CHAT_ENTER_STATE.CT_ENTER, type, ch);
-            if (!await EnterUserChannel(type))
-                Console.WriteLine("ChatPlayer EnterUserChannel Fail : " + UserData.UserUID);
 
             Console.WriteLine("EnterChannel : " + ch);
             if (!await RedisManager.Instance.SubscribeAction(SessionState, ch, UserData, action))
@@ -278,6 +278,7 @@ namespace ChatServer
                 case CHAT_TYPE.CT_GUILD:
                     await RedisManager.Instance.ForcePublish(SessionState, GetGuildChannel(), EncodingJson.Serialize(enterUser));
                     break;
+
                 default:
                     return false;
             }

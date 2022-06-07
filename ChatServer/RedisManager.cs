@@ -183,7 +183,8 @@ namespace ChatServer
                 string log = EncodingJson.Serialize(message.LogData);
                 HashEntry[] hash =
                 {
-                    new HashEntry(DateTime.Now.ToString(format: "yyyyMMddHHmmss"), log)
+                    // 한국시간으로 변경.
+                    new HashEntry(DateTime.Now.ToUniversalTime().AddHours(9).ToString(format: "yyyyMMddHHmmss"), log)
                     //new HashEntry("data", message.LogData.UserName + message.LogData.Text)
                 };
 
@@ -259,14 +260,19 @@ namespace ChatServer
             return count;
         }
 
-        public async Task<List<ChatLogData>> GetGuildLogData(SessionState conn, string channel)
+        public async Task<List<ChatGuildLogData>> GetGuildLogData(SessionState conn, string channel, DateTime loginTime)
         {
-            //new HashEntry("time", DateTime.Now.ToString(format: "yyyyMMdd HHmmss")),
-            var result = await conn.db.HashGetAllAsync(Constance.LOG + channel);
-            List<ChatLogData> logs = new List<ChatLogData>();
+            //string pattern = loginTime.AddDays(-1).ToString(format: "yyyyMM") + "*";
+            string pattern = loginTime.ToString(format:"yyyyMMdd") + "*";
+            var result = conn.db.HashScan(Constance.LOG + channel, pattern, Constance.PAGE_SIZE, Constance.LOG_COUNT, 0);
+
+            List<ChatGuildLogData> logs = new List<ChatGuildLogData>();
+            ChatGuildLogData log = new ChatGuildLogData();
             foreach (HashEntry entry in result)
             {
-                logs.Add(JsonSerializer.Deserialize<ChatLogData>(entry.Value.ToString()));
+                log = JsonSerializer.Deserialize<ChatGuildLogData>(entry.Value.ToString());
+                log.Time = DateTime.ParseExact(entry.Name, "yyyyMMddHHmmss", null).ToUniversalTime();
+                logs.Add(log);
             }
 
             return logs;

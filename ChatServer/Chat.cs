@@ -204,7 +204,7 @@ namespace ChatServer
                     case CHAT_COMMAND.CT_GUILD_LOG:
                         req_ChatGuildLog logMessage = (req_ChatGuildLog)EncodingJson.Deserialize<req_ChatGuildLog>(stream);                        
                         res_ChatGuildLog guildLog = new res_ChatGuildLog();
-                        List<ChatLogData> logs = new List<ChatLogData>();
+                        List<ChatGuildLogData> logs = new List<ChatGuildLogData>();
                         logs = await m_ChatPlayer.GetGuildLog();
 
                         guildLog.Command = CHAT_COMMAND.CT_GUILD_LOG;

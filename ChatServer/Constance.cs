@@ -69,6 +69,8 @@ namespace ChatServer
         public const string SYSTEM = "SYSTEM";
         public const string GM_NOTICE = "GM_NOTICE";
         public const string LOG = "LOG";
+        public const int PAGE_SIZE = 250;
+        public const int LOG_COUNT = 100;
 
         public static int POSSIBLE_CHANNEL_NUMBER = 1;
     }
