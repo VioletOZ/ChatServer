@@ -22,8 +22,8 @@ namespace ChatServer
             if (webSocketServer != null)
                 return;
 
-            webSocketServer = new WebSocketServer(9001);
-            //webSocketServer = new WebSocketServer(Constance.PORT);
+            //webSocketServer = new WebSocketServer(9001);
+            webSocketServer = new WebSocketServer(Constance.PORT);
             webSocketServer.AddWebSocketService<Chat>("/Chat");
 
             //서버시작
