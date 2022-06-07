@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+
 using System.Threading;
 using System.Threading.Tasks;
 using StackExchange.Redis;
@@ -14,15 +15,11 @@ using System.Text.Json.Serialization;
 
 namespace ChatServer
 {
-    public interface IConnectionMultiPlexerPool
-    {
-        Task<IDatabase> GetDatabaseAsync();
-    }
-
-    class RedisManager : IConnectionMultiPlexerPool
+    class RedisManager
     {
         private static volatile RedisManager _instance;
         private static object _syncRoot = new Object();
+
         public static RedisManager Instance
         {
             get
@@ -52,11 +49,9 @@ namespace ChatServer
         private readonly ConnectionMultiplexer[] _connectionPool;
         private readonly ConfigurationOptions _redisConfigurationOptions;
 
-        private ISubscriber _subscriber { get; }
-        private IDatabase _db { get; }
         private string _env { get; }
 
-        private ConnectionMultiplexer _multiplexer = null;
+        //private ConnectionMultiplexer _multiplexer = null;
         private Dictionary<string, List<ChatUserData>> _subChannelDict = new Dictionary<string, List<ChatUserData>>(); // 구독중인 채널, Client Session
         private MessageQueue _messageQueue = new MessageQueue();
 
@@ -69,10 +64,10 @@ namespace ChatServer
                 _env = "localhost:6379";
             }
 
-            _multiplexer = ConnectionMultiplexer.Connect(_env);
+            //_multiplexer = ConnectionMultiplexer.Connect(_env);
 
-            _subscriber = _multiplexer.GetSubscriber();
-            _db = _multiplexer.GetDatabase();
+            //_subscriber = _multiplexer.GetSubscriber();
+            //_db = _multiplexer.GetDatabase();
 
 
             _connectionPool = new ConnectionMultiplexer[Constance.POOL_SIZE];
@@ -82,15 +77,12 @@ namespace ChatServer
 
 
         // 레디스 Session 검증 - 서버에서 접속시 등록된 Session으로 허용된 접근인지 확인
-        public async Task<bool> AuthVerify(string SessionID)
+        public async Task<bool> AuthVerify(SessionState conn, string SessionID)
         {
-            var tt = GetDatabaseAsync();
-
-            
             try
             {
                 Console.WriteLine("Enter - " + SessionID);
-                var result = await _db.KeyExistsAsync("Session:" + SessionID);
+                var result = await conn.db.KeyExistsAsync("Session:" + SessionID);
                 if (result)
                     return true;
             }
@@ -103,7 +95,7 @@ namespace ChatServer
             return true;
         }
 
-        public async Task<bool> SubscribeAction(string channel, ChatUserData user, Action<RedisChannel, RedisValue> ac)
+        public async Task<bool> SubscribeAction(SessionState conn, string channel, ChatUserData user, Action<RedisChannel, RedisValue> ac)
         {
             if (!_subChannelDict.ContainsKey(channel))
                 _subChannelDict.Add(channel, new List<ChatUserData>());
@@ -113,8 +105,7 @@ namespace ChatServer
 
             _subChannelDict[channel].Add(user);
 
-            await _multiplexer.GetSubscriber().SubscribeAsync(channel, ac);
-
+            await conn.subscriber.SubscribeAsync(channel, ac);
             
             return true;
         }
@@ -129,7 +120,7 @@ namespace ChatServer
             return false;
         }
         // Redis Subscribe - 구독하고 있는 채널에 Pub가 오면 구독중인 Client에 메시지 전달
-        public bool Subscribe(string channel, ChatUserData user = null)
+        public bool Subscribe(SessionState conn, string channel, ChatUserData user = null)
         {
             if (string.IsNullOrEmpty(channel)) 
                 return false;
@@ -143,7 +134,7 @@ namespace ChatServer
 
             Console.WriteLine("Sub Channel : " + channel);
 
-            _multiplexer.GetSubscriber().SubscribeAsync(channel, (RedisChannel ch, RedisValue val) =>
+            conn.subscriber.SubscribeAsync(channel, (RedisChannel ch, RedisValue val) =>
             {
                 try
                 {
@@ -166,7 +157,7 @@ namespace ChatServer
         }
 
         // Redis Pub
-        public async Task Publish(string channel, req_ChatMessage message)
+        public async Task Publish(SessionState conn, string channel, req_ChatMessage message)
         {
             Console.WriteLine("Publish Message Type : " + message.ChatType +"-" +channel);
 
@@ -181,29 +172,40 @@ namespace ChatServer
             resMessage.ChannelID = message.ChannelID;
             resMessage.LogData = message.LogData;
 
-            var publish = await _subscriber.PublishAsync(channel, EncodingJson.Serialize(resMessage));
+            var publish = await conn.subscriber.PublishAsync(channel, EncodingJson.Serialize(resMessage));
 
+            // 길드 채팅의 경우 내용저장
+            // 길드채널
+            //      ㄴ 채팅시간
+            //              ㄴ 유저네임 : 내용
             if (CHAT_TYPE.CT_GUILD == message.ChatType)
-                _db.StringSet(channel, EncodingJson.Serialize(message));
-            //_db.StringSet(message.Channel.ToString(), message.Text);
+            {
+                string log = EncodingJson.Serialize(message.LogData);
+                HashEntry[] hash =
+                {
+                    new HashEntry(DateTime.Now.ToString(format: "yyyyMMddHHmmss"), log)
+                    //new HashEntry("data", message.LogData.UserName + message.LogData.Text)
+                };
+
+                _ = conn.db.HashSetAsync(Constance.LOG + channel, hash);
+            }
+            
         }
 
         // 서버에서 특정채널에 메시지만 보내도록 쓸려고 만든것
-        public async Task ForcePublish(string channel, string message)
+        public async Task ForcePublish(SessionState conn, string channel, string message)
         {
-            await _subscriber.PublishAsync(channel, message);
-            //Task t = _subscriber.PublishAsync(channel, message);
-            //t.Wait();
+            await conn.subscriber.PublishAsync(channel, message);
         }
 
-        public void GachaPublish(string channel, res_ChatGachaNotice notiMessage)
+        public void GachaPublish(SessionState conn, string channel, res_ChatGachaNotice notiMessage)
         {
-            _subscriber.PublishAsync(channel, EncodingJson.Serialize(notiMessage));
+            conn.subscriber.PublishAsync(channel, EncodingJson.Serialize(notiMessage));
         }
 
-        public async Task<bool> UnSubscribe(string channel, long userUid)
+        public async Task<bool> UnSubscribe(SessionState conn, string channel, long userUid)
         {
-            await _subscriber.UnsubscribeAsync(channel);
+            await conn.subscriber.UnsubscribeAsync(channel);
 
             if (_subChannelDict.ContainsKey(channel))
             {
@@ -224,12 +226,12 @@ namespace ChatServer
             return false;
         }
 
-        public async Task UnSubscribeAll()
+        public async Task UnSubscribeAll(SessionState conn)
         {
-            await _subscriber.UnsubscribeAllAsync();
+            await conn.subscriber.UnsubscribeAllAsync();
         }
 
-        public List<ChatUserData> GetUsersByChannel(string channel)
+        public List<ChatUserData> GetUsersByChannel(SessionState conn, string channel)
         {
             try
             {
@@ -243,7 +245,7 @@ namespace ChatServer
 
         }
 
-        public int GetPossibleChannel()
+        public int GetPossibleChannel(SessionState conn)
         {
             int count = 1;
             string channel = Constance.NORMAL + count.ToString();
@@ -257,26 +259,29 @@ namespace ChatServer
             return count;
         }
 
-        public async Task GetGuildLogData(string channel)
+        public async Task<List<ChatLogData>> GetGuildLogData(SessionState conn, string channel)
         {
-            ChatLogData logData = new ChatLogData();
+            //new HashEntry("time", DateTime.Now.ToString(format: "yyyyMMdd HHmmss")),
+            var result = await conn.db.HashGetAllAsync(Constance.LOG + channel);
+            List<ChatLogData> logs = new List<ChatLogData>();
+            foreach (HashEntry entry in result)
+            {
+                logs.Add(JsonSerializer.Deserialize<ChatLogData>(entry.Value.ToString()));
+            }
 
-            var data = await _db.StringGetAsync(channel);
-
-            
-            
+            return logs;
         }
 
-        public async Task GetUserHash(string userUID)
+        public async Task GetUserHash(SessionState conn, string userUID)
         {
-            var val = await _db.HashGetAsync("User:" + userUID, "User");
+            var val = await conn.db.HashGetAsync("User:" + userUID, "User");
             Console.WriteLine("GetHash" + val);
 
         }
 
-        public async Task GetString(string key)
+        public async Task GetString(SessionState conn, string key)
         {
-            var val = await _db.StringGetAsync(key);
+            var val = await conn.db.StringGetAsync(key);
             Console.WriteLine("GetString : " + val);
 
         }

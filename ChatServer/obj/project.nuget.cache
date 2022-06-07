@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "aQPOxGxbe+XqAa3pYVa1/9CgeeEip4p9Onq77/Qw+R6HM/1tiUuZdUtx6NA1x1XUFe5RbsLETUowYnaxxHQ/6Q==",
+  "dgSpecHash": "HLRbhyNVAt+ssiqYNFYqJIZ0n8u6pzD4eAye6iKiSNFgj7u/oTAgUIoecJhGKejqjKa1R01OdXZxDy8c53MejA==",
   "success": true,
   "projectFilePath": "C:\\YSL\\Trunk\\Server\\ChatServer\\ChatServer\\ChatServer.csproj",
   "expectedPackageFiles": [
@@ -8,8 +8,14 @@
     "C:\\Users\\jh.kwon\\.nuget\\packages\\microsoft.visualstudio.azure.containers.tools.targets\\1.11.1\\microsoft.visualstudio.azure.containers.tools.targets.1.11.1.nupkg.sha512",
     "C:\\Users\\jh.kwon\\.nuget\\packages\\microsoft.win32.registry\\5.0.0\\microsoft.win32.registry.5.0.0.nupkg.sha512",
     "C:\\Users\\jh.kwon\\.nuget\\packages\\microsoft.win32.systemevents\\5.0.0\\microsoft.win32.systemevents.5.0.0.nupkg.sha512",
+    "C:\\Users\\jh.kwon\\.nuget\\packages\\nito.asyncex.coordination\\5.0.0\\nito.asyncex.coordination.5.0.0.nupkg.sha512",
+    "C:\\Users\\jh.kwon\\.nuget\\packages\\nito.asyncex.tasks\\5.0.0\\nito.asyncex.tasks.5.0.0.nupkg.sha512",
+    "C:\\Users\\jh.kwon\\.nuget\\packages\\nito.collections.deque\\1.0.4\\nito.collections.deque.1.0.4.nupkg.sha512",
+    "C:\\Users\\jh.kwon\\.nuget\\packages\\nito.disposables\\2.0.0\\nito.disposables.2.0.0.nupkg.sha512",
     "C:\\Users\\jh.kwon\\.nuget\\packages\\pipelines.sockets.unofficial\\2.2.2\\pipelines.sockets.unofficial.2.2.2.nupkg.sha512",
     "C:\\Users\\jh.kwon\\.nuget\\packages\\stackexchange.redis\\2.5.61\\stackexchange.redis.2.5.61.nupkg.sha512",
+    "C:\\Users\\jh.kwon\\.nuget\\packages\\stackexchange.redis.multiplexerpool\\1.0.2\\stackexchange.redis.multiplexerpool.1.0.2.nupkg.sha512",
+    "C:\\Users\\jh.kwon\\.nuget\\packages\\system.collections.immutable\\1.4.0\\system.collections.immutable.1.4.0.nupkg.sha512",
     "C:\\Users\\jh.kwon\\.nuget\\packages\\system.configuration.configurationmanager\\5.0.0\\system.configuration.configurationmanager.5.0.0.nupkg.sha512",
     "C:\\Users\\jh.kwon\\.nuget\\packages\\system.diagnostics.performancecounter\\5.0.0\\system.diagnostics.performancecounter.5.0.0.nupkg.sha512",
     "C:\\Users\\jh.kwon\\.nuget\\packages\\system.drawing.common\\5.0.0\\system.drawing.common.5.0.0.nupkg.sha512",

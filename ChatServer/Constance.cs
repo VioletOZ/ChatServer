@@ -68,6 +68,7 @@ namespace ChatServer
         public const string GUILD = "GUILD";
         public const string SYSTEM = "SYSTEM";
         public const string GM_NOTICE = "GM_NOTICE";
+        public const string LOG = "LOG";
 
         public static int POSSIBLE_CHANNEL_NUMBER = 1;
     }

@@ -15,7 +15,7 @@ namespace ChatServer
 
     public class ChatLogData
     {
-        public string UserUID { get; set; }
+        public long UserUID { get; set; }
         public string UserName { get; set; }
         public int LeaderCharacterID { get; set; }
         public int EmoticonNum { get; set; }

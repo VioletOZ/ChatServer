@@ -22,6 +22,8 @@ namespace ChatServer
         public int GuildChannel { get; set; }
 
         public ChatUserData UserData = new ChatUserData();
+        public SessionState SessionState = new SessionState();
+        
         // 1:1 대화등의 메시지 저장용
         public Dictionary<string, BlockingCollection<string>> WhisperMessage { get; set; }
 
@@ -33,11 +35,13 @@ namespace ChatServer
             this.UserData.UserName = name;
             this.UserData.CharacterID = charId;
 
+            this.SessionState.subscriber = RedisManager.Instance.GetSubscriberAsync().Result;
+            this.SessionState.db = RedisManager.Instance.GetDatabaseAsync().Result;
         }
 
         public async Task<bool> AuthVerify()
         {
-            var result = await RedisManager.Instance.AuthVerify(SessionID);
+            var result = await RedisManager.Instance.AuthVerify(SessionState, SessionID);            
             if (!result)
                 return false;
             return true;
@@ -55,20 +59,20 @@ namespace ChatServer
             {
                 case CHAT_TYPE.CT_NORMAL:
                     Console.WriteLine("SendMessage Channel : " + GetNormalChannel());
-                    await RedisManager.Instance.Publish(GetNormalChannel(), message);
+                    await RedisManager.Instance.Publish(SessionState, GetNormalChannel(), message);
                     break;
 
                 case CHAT_TYPE.CT_GUILD:
                     Console.WriteLine("SendMessage Channel : " + GetGuildChannel());
-                    await RedisManager.Instance.Publish(GetGuildChannel(), message);
+                    await RedisManager.Instance.Publish(SessionState, GetGuildChannel(), message);
                     break;
 
                 case CHAT_TYPE.CT_SYSTEM:
-                    await RedisManager .Instance.Publish(Constance.SYSTEM, message);
+                    await RedisManager .Instance.Publish(SessionState, Constance.SYSTEM, message);
                     break;
 
                 case CHAT_TYPE.CT_GM_NOTICE:
-                    await RedisManager .Instance.Publish(Constance.GM_NOTICE, message);
+                    await RedisManager .Instance.Publish(SessionState, Constance.GM_NOTICE, message);
                     break;
             }
         }
@@ -125,14 +129,9 @@ namespace ChatServer
             }
         }
 
-        public void GuildChatLog(req_ChatGuildLog message)
+        public async Task<List<ChatLogData>> GetGuildLog()
         {
-            if (message == null)
-            {
-                Console.WriteLine("ChatPlayer RecvMessage Message Null");
-                return;
-            }
-
+            return await RedisManager.Instance.GetGuildLogData(SessionState, GetGuildChannel());
         }
 
         // 채널변경은 일반 채널밖에 되지않음.
@@ -164,7 +163,6 @@ namespace ChatServer
 
         public async Task<bool> EnterChannel(CHAT_TYPE type, int channelNum, Action<RedisChannel, RedisValue> action)
         {
-            //Task.Run(() => RedisManager.Instance.Subscribe(channel, sessionId));
             if (!channelDict.ContainsKey(type))
                 channelDict.Add(type, channelNum);
             
@@ -188,19 +186,20 @@ namespace ChatServer
                     break;
             }
 
-            Console.WriteLine("EnterChannel : " + ch);
-            if (!await RedisManager.Instance.SubscribeAction(ch, UserData, action))
-                Console.WriteLine("ChatPlayer EnterChannel Subscribe Fail : " + ch);
-
             //await UserStateChannel(CHAT_ENTER_STATE.CT_ENTER, type, ch);
             if (!await EnterUserChannel(type))
                 Console.WriteLine("ChatPlayer EnterUserChannel Fail : " + UserData.UserUID);
+
+            Console.WriteLine("EnterChannel : " + ch);
+            if (!await RedisManager.Instance.SubscribeAction(SessionState, ch, UserData, action))
+                Console.WriteLine("ChatPlayer EnterChannel Subscribe Fail : " + ch);
 
             return true;
         }
 
         public async Task<bool> LeaveChannel(CHAT_TYPE type)
         {
+            Console.WriteLine("LeaveChannel :" + type);
             string channel = "";
             switch (type)
             {
@@ -221,7 +220,7 @@ namespace ChatServer
                     return false;
             }
 
-            if (!await RedisManager.Instance.UnSubscribe(channel, UserData.UserUID))
+            if (!await RedisManager.Instance.UnSubscribe(SessionState, channel, UserData.UserUID))
                 return false;
 
             //await UserStateChannel(CHAT_ENTER_STATE.CT_ENTER, type, channel);
@@ -256,10 +255,10 @@ namespace ChatServer
         public async Task LeaveAllChannel()
         {
             //channelDict.AsParallel().ForAll(entry => Task.Run(() => RedisManager.Instance.UnSubscribe(entry.Key.ToString() + entry.Value, this.SessionID)));
-            await RedisManager.Instance.UnSubscribe(GetNormalChannel(), UserData.UserUID);
+            await RedisManager.Instance.UnSubscribe(SessionState, GetNormalChannel(), UserData.UserUID);
 
             if (GuildChannel > 0)
-                await RedisManager.Instance.UnSubscribe(GetGuildChannel(), UserData.UserUID);
+                await RedisManager.Instance.UnSubscribe(SessionState, GetGuildChannel(), UserData.UserUID);
 
         }
 
@@ -274,10 +273,10 @@ namespace ChatServer
             switch (type)
             {
                 case CHAT_TYPE.CT_NORMAL:
-                    await RedisManager.Instance.ForcePublish(GetNormalChannel(), EncodingJson.Serialize(enterUser));
+                    await RedisManager.Instance.ForcePublish(SessionState, GetNormalChannel(), EncodingJson.Serialize(enterUser));
                     break;
                 case CHAT_TYPE.CT_GUILD:
-                    await RedisManager.Instance.ForcePublish(GetGuildChannel(), EncodingJson.Serialize(enterUser));
+                    await RedisManager.Instance.ForcePublish(SessionState, GetGuildChannel(), EncodingJson.Serialize(enterUser));
                     break;
                 default:
                     return false;
@@ -296,11 +295,11 @@ namespace ChatServer
             switch (type)
             {
                 case CHAT_TYPE.CT_NORMAL:
-                    await RedisManager.Instance.ForcePublish(GetNormalChannel(), EncodingJson.Serialize(leaveUser));
+                    await RedisManager.Instance.ForcePublish(SessionState, GetNormalChannel(), EncodingJson.Serialize(leaveUser));
                     break;
 
                 case CHAT_TYPE.CT_GUILD:
-                    await RedisManager.Instance.ForcePublish(GetNormalChannel(), EncodingJson.Serialize(leaveUser));
+                    await RedisManager.Instance.ForcePublish(SessionState, GetNormalChannel(), EncodingJson.Serialize(leaveUser));
                     break;
 
                 default:
@@ -311,7 +310,7 @@ namespace ChatServer
 
         public async Task<bool> ReceiveEnd()
         {
-            if (!await RedisManager.Instance.UnSubscribe(GetNormalChannel(), UserData.UserUID))
+            if (!await RedisManager.Instance.UnSubscribe(SessionState, GetNormalChannel(), UserData.UserUID))
                 return false;
 
             return true;
