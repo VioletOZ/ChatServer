@@ -34,6 +34,7 @@ namespace ChatServer
         CT_INFO = 3,                                                // 채팅채널에 유저정보
         CT_GUILD_LOG = 4,                                           // 길드 채팅로그
         CT_LEADER_CHANGE = 5,                                       // 대표 캐릭터 변경
+        CT_NORMAL_LOG = 6,                                          // 일반 채팅 로그
 
 
         CT_MESSAGE = 10,                                            // 채팅

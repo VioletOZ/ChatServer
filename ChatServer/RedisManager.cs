@@ -199,9 +199,9 @@ namespace ChatServer
             await conn.subscriber.PublishAsync(channel, message);
         }
 
-        public void GachaPublish(SessionState conn, string channel, res_ChatGachaNotice notiMessage)
+        public async Task GachaPublish(SessionState conn, string channel, res_ChatGachaNotice notiMessage)
         {
-            conn.subscriber.PublishAsync(channel, EncodingJson.Serialize(notiMessage));
+            await conn.subscriber.PublishAsync(channel, EncodingJson.Serialize(notiMessage));
         }
 
         public async Task<bool> UnSubscribe(SessionState conn, string channel, long userUid)
@@ -260,7 +260,7 @@ namespace ChatServer
             return count;
         }
 
-        public async Task<List<ChatGuildLogData>> GetGuildLogData(SessionState conn, string channel, DateTime loginTime)
+        public List<ChatGuildLogData> GetGuildLogData(SessionState conn, string channel, DateTime loginTime)
         {
             //string pattern = loginTime.AddDays(-1).ToString(format: "yyyyMM") + "*";
             string pattern = loginTime.ToString(format:"yyyyMMdd") + "*";

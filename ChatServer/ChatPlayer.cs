@@ -129,9 +129,9 @@ namespace ChatServer
             }
         }
 
-        public async Task<List<ChatGuildLogData>> GetGuildLog()
+        public List<ChatGuildLogData> GetGuildLog()
         {
-            return await RedisManager.Instance.GetGuildLogData(SessionState, GetGuildChannel(), LoginTime);
+            return RedisManager.Instance.GetGuildLogData(SessionState, GetGuildChannel(), LoginTime);
         }
 
         // 채널변경은 일반 채널밖에 되지않음.

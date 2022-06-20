@@ -73,76 +73,85 @@ namespace ChatServer
         // Socket 연결시 호출
         protected override async void OnOpen()
         {
-            // Redis 에서 해당유저 UID로 세션 검색.
-            string sessionID = this.Headers.Get("SessionID") ?? null;               //SessionID
-            long UID = 0;
-            Int64.TryParse(this.Headers.Get("UserUID"), out UID);                   //UserUID
-            string name = this.Headers.Get("UserName") ?? null;                     //Name - Redis에 없음
-            int guildID = 0;
-            Int32.TryParse(this.Headers.Get("GuildID"), out guildID);
-            int charID = 0;
-            Int32.TryParse(this.Headers.Get("FavoriteCharacterID"), out charID);
-
-            if (sessionID == null || UID == 0 || name == null)
+            try 
             {
-                Console.WriteLine("Chat OnOpen Request Header Error");
-                CloseAsync();
-                return;
+                // Redis 에서 해당유저 UID로 세션 검색.
+                string sessionID = this.Headers.Get("SessionID") ?? null;               //SessionID
+                long UID = 0;
+                Int64.TryParse(this.Headers.Get("UserUID"), out UID);                   //UserUID
+                string name = this.Headers.Get("UserName") ?? null;                     //Name - Redis에 없음
+                int guildID = 0;
+                Int32.TryParse(this.Headers.Get("GuildID"), out guildID);
+                int charID = 0;
+                Int32.TryParse(this.Headers.Get("FavoriteCharacterID"), out charID);
+
+                if (sessionID == null || UID == 0 || name == null)
+                {
+                    Console.WriteLine("Chat OnOpen Request Header Error");
+                    CloseAsync();
+                    return;
+                }
+
+                var result = await InitClient(sessionID, UID, name, charID, guildID);
+                if (!result)
+                {
+                    Console.WriteLine("Chat OnOpen InitClient Error");
+                    CloseAsync();
+                    return;
+                }
+
+                res_ChatLogin resLogin = new res_ChatLogin();
+                resLogin.ReturnCode = RETURN_CODE.RC_OK;
+                resLogin.ChannelID = m_ChatPlayer.NormalChannel;
+                resLogin.GuildChannelID = m_ChatPlayer.GuildChannel;
+
+                string json = JsonSerializer.Serialize<res_ChatLogin>(resLogin, options);
+                SendAsync(json, null);
+                Console.WriteLine("Connected : " + ID + "(UID:" + UID + ") Count : " + Sessions.Count);
+            }
+            catch (Exception e)
+            {
+               Console.WriteLine("OnOpen Error - " + e.Message +" SessionCount : " + Sessions.Count);
             }
             
-            var result = await InitClient(sessionID, UID, name, charID, guildID);
-            if (!result)
-            {
-                Console.WriteLine("Chat OnOpen InitClient Error");
-                CloseAsync();
-                return;
-            }
-
-            res_ChatLogin resLogin = new res_ChatLogin();
-            resLogin.ReturnCode = RETURN_CODE.RC_OK;
-            resLogin.ChannelID = m_ChatPlayer.NormalChannel;
-            resLogin.GuildChannelID = m_ChatPlayer.GuildChannel;
-
-            string json = JsonSerializer.Serialize<res_ChatLogin>(resLogin, options);
-            SendAsync(json, null);
-            Console.WriteLine("Connected : " + ID + "(UID:" + UID + ") Count : " + Sessions.Count);
         }
 
         protected override async void OnMessage(MessageEventArgs args)
         {
-            Console.WriteLine("OnMessage ID : " + ID + "\nMsg : " + args.Data);
-            if (args.Data == null)
-            {
-                Console.WriteLine("Chat OnMessage Data Null");
-                return;
-            }
-
-            MemoryStream stream;
-            req_Command command = new req_Command();
             try
             {
+                Console.WriteLine("OnMessage ID : " + ID + "\nMsg : " + args.Data);
+                if (args.Data == null)
+                {
+                    Console.WriteLine("Chat OnMessage Data Null");
+                    return;
+                }
+
+                MemoryStream stream;
+                req_Command command = new req_Command();
+                try
+                {
+                    stream = new MemoryStream(Encoding.UTF8.GetBytes(args.Data));
+                    command = JsonSerializer.Deserialize<req_Command>(stream, options);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("Chat OnMessage Json Parse Error : " + e.Message);
+                    SendAsync("Send Data Error", null);
+                    return;
+                }
+
+
+                if (command == null)
+                {
+                    Console.WriteLine("Chat OnMessage Command Null");
+                    return;
+                }
+
                 stream = new MemoryStream(Encoding.UTF8.GetBytes(args.Data));
-                command = JsonSerializer.Deserialize<req_Command>(stream, options);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("Chat OnMessage Json Parse Error : " + e.Message);
-                SendAsync("Send Data Error", null);
-                return;
-            }
-            
+                string channel;
+                // 
 
-            if (command == null)
-            {
-                Console.WriteLine("Chat OnMessage Command Null");
-                return;
-            }
-
-            stream = new MemoryStream(Encoding.UTF8.GetBytes(args.Data));
-            string channel;
-            // 
-            try
-            {
                 switch (command.Command)
                 {
                     case CHAT_COMMAND.CT_LOGIN:
@@ -205,7 +214,7 @@ namespace ChatServer
                         req_ChatGuildLog logMessage = (req_ChatGuildLog)EncodingJson.Deserialize<req_ChatGuildLog>(stream);                        
                         res_ChatGuildLog guildLog = new res_ChatGuildLog();
                         List<ChatGuildLogData> logs = new List<ChatGuildLogData>();
-                        logs = await m_ChatPlayer.GetGuildLog();
+                        logs = m_ChatPlayer.GetGuildLog();
 
                         guildLog.Command = CHAT_COMMAND.CT_GUILD_LOG;
                         guildLog.ReturnCode = RETURN_CODE.RC_OK;
@@ -224,6 +233,9 @@ namespace ChatServer
                         leaderChange.Command = CHAT_COMMAND.CT_LEADER_CHANGE;
 
                         SendAsync(JsonSerializer.Serialize<res_ChatLeaderChange>(leaderChange, options), null);
+                        break;
+
+                    case CHAT_COMMAND.CT_NORMAL_LOG:
                         break;
 
                     case CHAT_COMMAND.CT_MESSAGE:
@@ -287,6 +299,7 @@ namespace ChatServer
                         break;
 
                     case CHAT_COMMAND.CT_CHANNEL_LEAVE_USER:
+                        //m_ChatPlayer.LeaveUserChannel()
                         break;
 
                     case CHAT_COMMAND.CT_CHANNEL_RECEIVE_END:
@@ -312,8 +325,8 @@ namespace ChatServer
 
                         //Sessions.BroadcastAsync(JsonSerializer.Serialize<res_ChatGachaNotice>(gachaNotice, options), null);
 
-                        RedisManager.Instance.GachaPublish(m_ChatPlayer.SessionState, m_ChatPlayer.GetNormalChannel(), gachaNotice);
-                        RedisManager.Instance.GachaPublish(m_ChatPlayer.SessionState, m_ChatPlayer.GetGuildChannel(), gachaNotice);
+                        await RedisManager.Instance.GachaPublish(m_ChatPlayer.SessionState, m_ChatPlayer.GetNormalChannel(), gachaNotice);
+                        await RedisManager.Instance.GachaPublish(m_ChatPlayer.SessionState, m_ChatPlayer.GetGuildChannel(), gachaNotice);
 
                         break;
 
@@ -324,7 +337,7 @@ namespace ChatServer
             }
             catch (Exception e)
             {
-                SendAsync("OnMessgae Error : " + command + "-" + e.Message, null);
+                SendAsync("OnMessgae Error : " + e.Message, null);
             }
         }
 
@@ -334,21 +347,20 @@ namespace ChatServer
             // 레디스에서 세션확인 해야함
             // 지금은 일단 그냥 접속종료
 
-            Console.WriteLine("OnClose : " + ID);
             try
             {
+                Console.WriteLine("OnClose : " + ID);
                 // 
                 await m_ChatPlayer.LeaveAllChannel();
                 //_ = RedisManager.Instance.UnSubscribe(m_ChatPlayer.GetNormalChannel(), m_ChatPlayer.UserData);
                 //_ = RedisManager.Instance.UnSubscribe(m_ChatPlayer.GetGuildChannel(), m_ChatPlayer.UserData);
+                CloseAsync();
+                Console.WriteLine("Session Close Count : " + Sessions.Count);
             }
             catch 
             {
                 // 정상적인 종료가 아닐경우 세션이 없다...
             }
-
-            CloseAsync();
-            Console.WriteLine("Session Close Count : " + Sessions.Count);            
         }
 
         protected override void OnError(WebSocketSharp.ErrorEventArgs e)
