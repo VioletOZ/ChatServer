@@ -188,7 +188,7 @@ namespace ChatServer
                     //new HashEntry("data", message.LogData.UserName + message.LogData.Text)
                 };
 
-                _ = conn.db.HashSetAsync(Constance.LOG + channel, hash);
+                //_ = conn.db.HashSetAsync(Constance.LOG + channel, hash);
             }
             
         }
