@@ -35,6 +35,8 @@ namespace ChatServer
             this.UserData.UserName = name;
             this.UserData.CharacterID = charId;
             this.LoginTime = DateTime.Now;
+            this.NormalChannel = 1;
+            this.GuildChannel = 0;
 
             this.SessionState.subscriber = RedisManager.Instance.GetSubscriberAsync().Result;
             this.SessionState.db = RedisManager.Instance.GetDatabaseAsync().Result;

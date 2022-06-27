@@ -357,9 +357,10 @@ namespace ChatServer
                 CloseAsync();
                 Console.WriteLine("Session Close Count : " + Sessions.Count);
             }
-            catch 
+            catch (Exception e)
             {
                 // 정상적인 종료가 아닐경우 세션이 없다...
+                Console.WriteLine("OnClose Message : " + e.Message);
             }
         }
 

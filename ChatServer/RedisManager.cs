@@ -303,6 +303,7 @@ namespace ChatServer
 
                 if (connection == null)
                 {
+                    _redisConfigurationOptions.AbortOnConnectFail = false;
                     _connectionPool[i] = await ConnectionMultiplexer.ConnectAsync(_redisConfigurationOptions);
                     return _connectionPool[i].GetSubscriber();
                 }
