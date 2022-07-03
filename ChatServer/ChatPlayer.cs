@@ -38,6 +38,7 @@ namespace ChatServer
             this.NormalChannel = 1;
             this.GuildChannel = 0;
 
+            this.SessionState.ServerSessionID = sessionId+":"+uid;
             this.SessionState.subscriber = RedisManager.Instance.GetSubscriberAsync().Result;
             this.SessionState.db = RedisManager.Instance.GetDatabaseAsync().Result;
         }

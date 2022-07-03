@@ -240,7 +240,7 @@ namespace ChatServer
             }
             catch (Exception e)
             {
-                Console.WriteLine("RedisManager GetUserByChannel subChannelDict Error : " + e.Message);
+                Console.WriteLine("RedisManager GetUserByChannel subChannelDict Error :" + conn.ServerSessionID + ":" + e.Message);
                 return null;
             }
 
