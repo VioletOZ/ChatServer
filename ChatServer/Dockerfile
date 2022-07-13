@@ -20,6 +20,6 @@ FROM build AS publish
 RUN dotnet publish "ChatServer.csproj" -c Release -o /app/publish
 
 FROM base AS final
-WORKDIR /app
+WORKDIR /server
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "ChatServer.dll"]
