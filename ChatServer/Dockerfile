@@ -21,5 +21,5 @@ RUN dotnet publish "ChatServer.csproj" -c Release -o /server/publish
 
 FROM base AS final
 WORKDIR /server
-COPY --from=publish /app/publish .
+COPY --from=publish /server/publish .
 ENTRYPOINT ["dotnet", "ChatServer.dll"]
