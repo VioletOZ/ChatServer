@@ -55,19 +55,19 @@ namespace ChatServer
         {
             if (message == null)
             {
-                Console.WriteLine("ChatPlayer PushMessage Message Null");
+                Logger.WriteLog("ChatPlayer PushMessage Message Null");
                 return;
             }
 
             switch (message.ChatType)
             {
                 case CHAT_TYPE.CT_NORMAL:
-                    Console.WriteLine("SendMessage Channel : " + GetNormalChannel());
+                    Logger.WriteLog("SendMessage Channel : " + GetNormalChannel());
                     await RedisManager.Instance.Publish(SessionState, GetNormalChannel(), message);
                     break;
 
                 case CHAT_TYPE.CT_GUILD:
-                    Console.WriteLine("SendMessage Channel : " + GetGuildChannel());
+                    Logger.WriteLog("SendMessage Channel : " + GetGuildChannel());
                     await RedisManager.Instance.Publish(SessionState, GetGuildChannel(), message);
                     break;
 
@@ -85,7 +85,7 @@ namespace ChatServer
         {
             if (message == null)
             {
-                Console.WriteLine("ChatPlayer RecvMessage Message Null");
+                Logger.WriteLog("ChatPlayer RecvMessage Message Null");
                 return;
             }
 
@@ -97,7 +97,7 @@ namespace ChatServer
         {
             if (message == null)
             {
-                Console.WriteLine("ChatPlayer Reconnect Message Null");
+                Logger.WriteLog("ChatPlayer Reconnect Message Null");
                 return false;
             }
             return true;
@@ -112,7 +112,7 @@ namespace ChatServer
         {
             if (message == null)
             {
-                Console.WriteLine("ChatPlayer ChannelInfo Message Null");
+                Logger.WriteLog("ChatPlayer ChannelInfo Message Null");
                 return;
             }
 
@@ -149,17 +149,17 @@ namespace ChatServer
 
             // 기존 채널 정보 변경후에
             channelDict[CHAT_TYPE.CT_NORMAL] = message.ChannelID;
-            Console.WriteLine("Change Channel : " + channelDict[CHAT_TYPE.CT_NORMAL]);
+            Logger.WriteLog("Change Channel : " + channelDict[CHAT_TYPE.CT_NORMAL]);
 
             // 구독중인 채널 삭제하고
             //await RedisManager.Instance.UnSubscribe(beforeChannel, userData);
             if (!await LeaveChannel(message.ChatType))
-                Console.WriteLine("ChatPlayer LeaveChannel Enter Fail : " + message.ChatType);
+                Logger.WriteLog("ChatPlayer LeaveChannel Enter Fail : " + message.ChatType);
 
             // 다시 구독요청
-            Console.WriteLine("ChangeChannel : " + CHAT_TYPE.CT_NORMAL.ToString() + message.ChannelID);
+            Logger.WriteLog("ChangeChannel : " + CHAT_TYPE.CT_NORMAL.ToString() + message.ChannelID);
             if (!await EnterChannel(CHAT_TYPE.CT_NORMAL, message.ChannelID, action))
-                Console.WriteLine("ChatPlayer ChannelChange Enter Fail : " + CHAT_TYPE.CT_NORMAL);
+                Logger.WriteLog("ChatPlayer ChannelChange Enter Fail : " + CHAT_TYPE.CT_NORMAL);
 
             return true;
         }
@@ -176,14 +176,14 @@ namespace ChatServer
                     NormalChannel = channelNum;
                     ch = GetNormalChannel();
                     if (!await EnterUserChannel(type))
-                        Console.WriteLine("ChatPlayer Normal EnterUserChannel Fail : " + UserData.UserUID);
+                        Logger.WriteLog("ChatPlayer Normal EnterUserChannel Fail : " + UserData.UserUID);
                     break;
 
                 case CHAT_TYPE.CT_GUILD:
                     GuildChannel = channelNum;
                     ch = GetGuildChannel();
                     if (!await EnterUserChannel(type))
-                        Console.WriteLine("ChatPlayer Guild EnterUserChannel Fail : " + UserData.UserUID);
+                        Logger.WriteLog("ChatPlayer Guild EnterUserChannel Fail : " + UserData.UserUID);
                     break;
                 case CHAT_TYPE.CT_SYSTEM:
                     ch = Constance.SYSTEM;
@@ -193,16 +193,16 @@ namespace ChatServer
                     break;
             }
 
-            Console.WriteLine("EnterChannel : " + ch);
+            Logger.WriteLog("EnterChannel : " + ch);
             if (!await RedisManager.Instance.SubscribeAction(SessionState, ch, UserData, action))
-                Console.WriteLine("ChatPlayer EnterChannel Subscribe Fail : " + ch);
+                Logger.WriteLog("ChatPlayer EnterChannel Subscribe Fail : " + ch);
 
             return true;
         }
 
         public async Task<bool> LeaveChannel(CHAT_TYPE type)
         {
-            Console.WriteLine("LeaveChannel :" + type);
+            Logger.WriteLog("LeaveChannel :" + type);
             string channel = "";
             switch (type)
             {
@@ -235,7 +235,7 @@ namespace ChatServer
         {
             if (message == null)
             {
-                Console.WriteLine("ChatPlayer LeaderChange Message Null");
+                Logger.WriteLog("ChatPlayer LeaderChange Message Null");
                 return false;
             }
 
@@ -248,7 +248,7 @@ namespace ChatServer
         {
             if (message == null)
             {
-                Console.WriteLine("ChatPlayer GachaNotice Message Null");
+                Logger.WriteLog("ChatPlayer GachaNotice Message Null");
                 return;
             }
 

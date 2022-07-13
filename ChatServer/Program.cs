@@ -8,7 +8,7 @@ using StackExchange.Redis.MultiplexerPool;
 
 using System.Threading;
 using System.Threading.Tasks;
-
+using System.IO;
 
 namespace ChatServer
 {
@@ -41,8 +41,8 @@ namespace ChatServer
                 }
             }
 
-            Console.WriteLine("ServerStart - " + ipAddr + ":" + webSocketServer.Port);            
-            Console.WriteLine("ESC Exit");
+            Logger.WriteLog("ServerStart - " + ipAddr + ":" + webSocketServer.Port);            
+            Logger.WriteLog("ESC Exit");
             while (true)
             {
                 //if (Console.KeyAvailable)

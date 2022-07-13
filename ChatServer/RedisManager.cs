@@ -60,7 +60,7 @@ namespace ChatServer
             _env = Environment.GetEnvironmentVariable("RedisConnection", EnvironmentVariableTarget.Process);
             if (_env == null)
             {
-                Console.WriteLine("ALARM - Localhost RedisConnection");
+                Logger.WriteLog("ALARM - Localhost RedisConnection");
                 _env = "localhost:6379";
             }
 
@@ -81,14 +81,14 @@ namespace ChatServer
         {
             try
             {
-                Console.WriteLine("Enter - " + SessionID);
+                Logger.WriteLog("Enter - " + SessionID);
                 var result = await conn.db.KeyExistsAsync("Session:" + SessionID);
                 if (result)
                     return true;
             }
             catch (Exception e)
             {
-                Console.WriteLine("RedisManager AuthVerify Exception : " + e.Message);
+                Logger.WriteLog("RedisManager AuthVerify Exception : " + e.Message);
                 return false;
             }
 
@@ -132,7 +132,7 @@ namespace ChatServer
 
             _subChannelDict[channel].Add(user); // 구독중인 채널 추가
 
-            Console.WriteLine("Sub Channel : " + channel);
+            Logger.WriteLog("Sub Channel : " + channel);
 
             conn.subscriber.SubscribeAsync(channel, (RedisChannel ch, RedisValue val) =>
             {
@@ -143,12 +143,12 @@ namespace ChatServer
                         eventMessage = "";
 
                     // 구독 받은 메시지 MessageQueue 에 저장
-                    Console.WriteLine("Sub Message : " + eventMessage);
+                    Logger.WriteLog("Sub Message : " + eventMessage);
 
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine("Redis Subscribe Exception : " + e.Message);
+                    Logger.WriteLog("Redis Subscribe Exception : " + e.Message);
                 }
             });
 
@@ -159,7 +159,7 @@ namespace ChatServer
         // Redis Pub
         public async Task Publish(SessionState conn, string channel, req_ChatMessage message)
         {
-            Console.WriteLine("Publish Message Type : " + message.ChatType +"-" +channel);
+            Logger.WriteLog("Publish Message Type : " + message.ChatType +"-" +channel);
 
             // TODO: 보내기전에 Connect 확인
             //if (!isConnected)
@@ -188,7 +188,8 @@ namespace ChatServer
                     //new HashEntry("data", message.LogData.UserName + message.LogData.Text)
                 };
 
-                //_ = conn.db.HashSetAsync(Constance.LOG + channel, hash);
+                _ = conn.db.HashSetAsync(Constance.LOG + channel, hash);
+                _ = conn.db.KeyExpireAsync(Constance.LOG, DateTime.Now.AddDays(7));
             }
             
         }
@@ -240,7 +241,7 @@ namespace ChatServer
             }
             catch (Exception e)
             {
-                Console.WriteLine("RedisManager GetUserByChannel subChannelDict Error :" + conn.ServerSessionID + ":" + e.Message);
+                Logger.WriteLog("RedisManager GetUserByChannel subChannelDict Error :" + conn.ServerSessionID + ":" + e.Message);
                 return null;
             }
 
@@ -281,14 +282,14 @@ namespace ChatServer
         public async Task GetUserHash(SessionState conn, string userUID)
         {
             var val = await conn.db.HashGetAsync("User:" + userUID, "User");
-            Console.WriteLine("GetHash" + val);
+            Logger.WriteLog("GetHash" + val);
 
         }
 
         public async Task GetString(SessionState conn, string key)
         {
             var val = await conn.db.StringGetAsync(key);
-            Console.WriteLine("GetString : " + val);
+            Logger.WriteLog("GetString : " + val);
 
         }
 

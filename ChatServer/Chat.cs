@@ -35,7 +35,7 @@ namespace ChatServer
                 return this.m_onRedisMessageHandler;
             }
         }
-
+        
         JsonSerializerOptions options = new JsonSerializerOptions
         {
             Converters =
@@ -87,7 +87,7 @@ namespace ChatServer
 
                 if (sessionID == null || UID == 0 || name == null)
                 {
-                    Console.WriteLine("Chat OnOpen Request Header Error");
+                    Logger.WriteLog("Chat OnOpen Request Header(Session) Error. SessionID : " + sessionID + " UID : " + UID);
                     CloseAsync();
                     return;
                 }
@@ -95,7 +95,7 @@ namespace ChatServer
                 var result = await InitClient(sessionID, UID, name, charID, guildID);
                 if (!result)
                 {
-                    Console.WriteLine("Chat OnOpen InitClient Error");
+                    Logger.WriteLog("Chat OnOpen InitClient Error");
                     CloseAsync();
                     return;
                 }
@@ -107,11 +107,11 @@ namespace ChatServer
 
                 string json = JsonSerializer.Serialize<res_ChatLogin>(resLogin, options);
                 SendAsync(json, null);
-                Console.WriteLine("Connected : " + ID + "(UID:" + UID + ") Count : " + Sessions.Count);
+                Logger.WriteLog("Connected : " + ID + "(UID:" + UID + ") Count : " + Sessions.Count);
             }
             catch (Exception e)
             {
-               Console.WriteLine("OnOpen Error - " + e.Message +" SessionCount : " + Sessions.Count);
+               Logger.WriteLog("OnOpen Error - " + e.Message +" SessionCount : " + Sessions.Count);
             }
             
         }
@@ -120,10 +120,10 @@ namespace ChatServer
         {
             try
             {
-                Console.WriteLine("OnMessage ID : " + ID + "\nMsg : " + args.Data);
+                Logger.WriteLog("OnMessage ID : " + ID + "\nMsg : " + args.Data);
                 if (args.Data == null)
                 {
-                    Console.WriteLine("Chat OnMessage Data Null");
+                    Logger.WriteLog("Chat OnMessage Data Null");
                     return;
                 }
 
@@ -136,7 +136,7 @@ namespace ChatServer
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine("Chat OnMessage Json Parse Error : " + e.Message);
+                    Logger.WriteLog("Chat OnMessage Json Parse Error : " + e.Message);
                     SendAsync("Send Data Error", null);
                     return;
                 }
@@ -144,7 +144,7 @@ namespace ChatServer
 
                 if (command == null)
                 {
-                    Console.WriteLine("Chat OnMessage Command Null");
+                    Logger.WriteLog("Chat OnMessage Command Null");
                     return;
                 }
 
@@ -331,7 +331,7 @@ namespace ChatServer
                         break;
 
                     default:
-                        Console.WriteLine("Request Command Error : " + command.Command);
+                        Logger.WriteLog("Request Command Error : " + command.Command);
                         break;
                 }
             }
@@ -349,24 +349,28 @@ namespace ChatServer
 
             try
             {
-                Console.WriteLine("OnClose : " + ID);
+                Logger.WriteLog("OnClose : " + ID);
                 // 
-                await m_ChatPlayer.LeaveAllChannel();
+                if (m_ChatPlayer != null)
+                {
+                    await m_ChatPlayer.LeaveAllChannel();                    
+                }
+                
                 //_ = RedisManager.Instance.UnSubscribe(m_ChatPlayer.GetNormalChannel(), m_ChatPlayer.UserData);
                 //_ = RedisManager.Instance.UnSubscribe(m_ChatPlayer.GetGuildChannel(), m_ChatPlayer.UserData);
                 CloseAsync();
-                Console.WriteLine("Session Close Count : " + Sessions.Count);
+                Logger.WriteLog("Session Close Count : " + Sessions.Count);
             }
             catch (Exception e)
             {
                 // 정상적인 종료가 아닐경우 세션이 없다...
-                Console.WriteLine("OnClose Message : " + e.Message);
+                Logger.WriteLog("OnClose Message : " + e.Message);
             }
         }
 
         protected override void OnError(WebSocketSharp.ErrorEventArgs e)
         {
-            Console.WriteLine("OnError : " + e.Message);
+            Logger.WriteLog("OnError : " + e.Message);
             base.OnError(e);
         }
 
@@ -374,31 +378,31 @@ namespace ChatServer
         public async Task<bool> InitClient(string sessionId, long uid, string name, int charId, int guildId = 0)
         {
             if (m_ChatPlayer != null)
-                Console.WriteLine("Chat InitClient ChatPlayer not null : " + ID);
-
+                Logger.WriteLog("Chat InitClient ChatPlayer not null : " + ID);
+            
             // 접속시에 유저정보 세팅
             m_ChatPlayer = new ChatPlayer(sessionId, uid, name, guildId, charId);
 
             var result = await m_ChatPlayer.AuthVerify();
             if (!result)
             {
-                Console.WriteLine("세션 인증실패 - SessionID : " + sessionId + " " + uid + name);
+                Logger.WriteLog("세션 인증실패 - SessionID : " + sessionId + " " + uid + name);
                 Close(CloseStatusCode.ServerError, "InvalidData");
                 return false;
             }
 
             // 시스템, Notice 구독
             if (!await m_ChatPlayer.EnterChannel(CHAT_TYPE.CT_SYSTEM, 0, OnRedisMessageHandler))
-                Console.WriteLine("Chat InitClient System Subscribe Fail : " + ID);
+                Logger.WriteLog("Chat InitClient System Subscribe Fail : " + ID);
             if (!await m_ChatPlayer.EnterChannel(CHAT_TYPE.CT_GM_NOTICE, 0, OnRedisMessageHandler))
-                Console.WriteLine("Chat InitClient GM_Notice Subscribe Fail : " + ID);
+                Logger.WriteLog("Chat InitClient GM_Notice Subscribe Fail : " + ID);
 
             // 접속시에 일반 채널 구독            
             int channelNum = 1;
             result = await m_ChatPlayer.EnterChannel(CHAT_TYPE.CT_NORMAL, channelNum, OnRedisMessageHandler);
             if(!result)
             {
-                Console.WriteLine("Chat InitClient Redis Subscribe Fail : " + ID);
+                Logger.WriteLog("Chat InitClient Redis Subscribe Fail : " + ID);
                 Close(CloseStatusCode.ServerError, "Sbuscribe");
             }
 
@@ -408,7 +412,7 @@ namespace ChatServer
                 // 길드UID를 채널번호로 지정 . 
                 result = await m_ChatPlayer.EnterChannel(CHAT_TYPE.CT_GUILD, guildId, OnRedisMessageHandler);
                 if (!result)
-                    Console.WriteLine("Chat InitClient EnterChannel Fail : " + ID);
+                    Logger.WriteLog("Chat InitClient EnterChannel Fail : " + ID);
             }
 
             return true;

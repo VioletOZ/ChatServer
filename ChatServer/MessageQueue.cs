@@ -30,7 +30,7 @@ namespace ChatServer
             }
             catch (Exception e)
             {
-                Console.WriteLine("MessageQueue Add Error : " + e.Message);
+                Logger.WriteLog("MessageQueue Add Error : " + e.Message);
                 return false;
             }
         }
@@ -44,7 +44,7 @@ namespace ChatServer
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.Message);
+                Logger.WriteLog(e.Message);
                 return false;
             }
         }
@@ -73,7 +73,7 @@ namespace ChatServer
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.Message);
+                Logger.WriteLog(e.Message);
                 return false;
             }
         }
@@ -87,7 +87,7 @@ namespace ChatServer
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.Message);
+                Logger.WriteLog(e.Message);
                 return false;
             }
         }
