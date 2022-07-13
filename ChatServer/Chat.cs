@@ -120,7 +120,7 @@ namespace ChatServer
         {
             try
             {
-                Logger.WriteLog("OnMessage ID : " + ID + "\nMsg : " + args.Data);
+                Logger.WriteLog("OnMessage ID : " + ID + "  Msg : " + args.Data);
                 if (args.Data == null)
                 {
                     Logger.WriteLog("Chat OnMessage Data Null");
