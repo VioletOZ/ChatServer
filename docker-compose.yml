@@ -11,7 +11,7 @@ services:
         - ServerPort=9000
         - RedisConnection=chat_redis
       volumes:
-        - "../data/ChatServer:/usr/local/data"
+        - "../data/ChatServer:/server/Logs"
       links:
         - "chat_redis"
       depends_on:
