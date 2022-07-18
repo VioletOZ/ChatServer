@@ -35,7 +35,7 @@ namespace ChatServer
                 return this.m_onRedisMessageHandler;
             }
         }
-        
+
         JsonSerializerOptions options = new JsonSerializerOptions
         {
             Converters =

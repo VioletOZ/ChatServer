@@ -30,5 +30,10 @@ WORKDIR /server
 ENV ENV_CHAT_SERVER_PORT 9000
 ENV ENV_CHAT_SERVER_LOG_PATH /server/logs
 
+# 설정 파일 복사
+COPY ["cfg/dnsmasq.conf", "/etc/dnsmasq.conf"]
+COPY ["cfg/sysctl.conf", "/etc/sysctl.conf"]
+COPY ["cfg/limits.conf", "/etc/security/limits.conf"]
+
 COPY --from=publish /server .
 ENTRYPOINT ["dotnet", "ChatServer.dll"]

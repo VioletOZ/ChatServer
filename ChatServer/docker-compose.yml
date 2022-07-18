@@ -4,14 +4,15 @@ services:
     chatserver:      
       build:
          context: .
-         dockerfile: ./ChatServer/Dockerfile
+         dockerfile: ./Dockerfile
       ports:
         - "9000:9000"
       environment:
-        - ServerPort=9000
+        - ENV_CHAT_SERVER_PORT=9000
+        - ENV_CHAT_SERVER_LOG_PATH="/server/logs"
         - RedisConnection=chat_redis
       volumes:
-        - "../data/ChatServer:/server/Logs"
+        - "../data/ChatServer:/server/logs"
       links:
         - "chat_redis"
       depends_on:

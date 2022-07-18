@@ -12,7 +12,7 @@ namespace ChatServer
         // 로그 파일 생성
         //static readonly string DirPath = Environment.CurrentDirectory + "/logs";
         static string DirPath = Constance.ENV_CHAT_SERVER_LOG_PATH;
-        static readonly string FilePath = DirPath + "/" + DateTime.Today.ToString("yyyy-MM-dd") + ".log";
+        static DirectoryInfo di = new DirectoryInfo(DirPath);
 
         public static void WriteLog(string str)
         {
@@ -20,7 +20,8 @@ namespace ChatServer
             
             try
             {
-                DirectoryInfo di = new DirectoryInfo(DirPath);
+                string FilePath = DirPath + "/" + DateTime.Today.ToString("yyyy-MM-dd") + ".log";
+                
                 FileInfo fi = new FileInfo(FilePath);
 
                 if (!di.Exists) Directory.CreateDirectory(DirPath);
