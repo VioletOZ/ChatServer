@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+
 namespace ChatServer
 {
     public enum RETURN_CODE
@@ -59,12 +60,12 @@ namespace ChatServer
 
     static class Constance
     {
-        public const string ADDRESS = "127.0.0.1";
-        public const int PORT = 9000;
+        public static readonly string ENV_CHAT_SERVER_PORT = Environment.GetEnvironmentVariable("ENV_CHAT_SERVER_PORT") == null ? "9000" : Environment.GetEnvironmentVariable("ENV_CHAT_SERVER_PORT");
+        public static readonly string ENV_CHAT_SERVER_LOG_PATH = Environment.GetEnvironmentVariable("ENV_CHAT_SERVER_LOG_PATH") == null ? "/server/log" : Environment.GetEnvironmentVariable("ENV_CHAT_SERVER_LOG_PATH");
+
         public const int CHANNEL_PLAYER_MAX = 50;               // 채널당 최대인원 임시값
         public const int CHANNEL_MAX = 9999;                    // 최대 채널갯수 임시값
-        public const int POOL_SIZE = 10000;
-
+        
         public const string NORMAL = "NORMAL";
         public const string GUILD = "GUILD";
         public const string SYSTEM = "SYSTEM";
@@ -72,6 +73,7 @@ namespace ChatServer
         public const string LOG = "LOG";
         public const int PAGE_SIZE = 250;
         public const int LOG_COUNT = 100;
+        public const int POOL_SIZE = 10000;
 
         public static int POSSIBLE_CHANNEL_NUMBER = 1;
     }

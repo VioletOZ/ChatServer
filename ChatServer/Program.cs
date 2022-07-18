@@ -16,14 +16,16 @@ namespace ChatServer
     {
         static void Main(string[] args)
         {
+            //string ENV_CHAT_SERVER_PORT = Environment.GetEnvironmentVariable("ENV_CHAT_SERVER_PORT");
+            //Logger.WriteLog("Server Port : " + ENV_CHAT_SERVER_PORT);
+            Logger.WriteLog("Server Port : " + Constance.ENV_CHAT_SERVER_PORT);
+            Logger.WriteLog("ServerLog Path : " + Constance.ENV_CHAT_SERVER_LOG_PATH);
             // 웹소켓 초기화
             WebSocketServer webSocketServer = null;
-
             if (webSocketServer != null)
                 return;
 
-            //webSocketServer = new WebSocketServer(9001);
-            webSocketServer = new WebSocketServer(Constance.PORT);
+            webSocketServer = new WebSocketServer(Convert.ToInt32(Constance.ENV_CHAT_SERVER_PORT));
             webSocketServer.AddWebSocketService<Chat>("/Chat");
 
             //서버시작

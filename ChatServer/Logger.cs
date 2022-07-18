@@ -10,7 +10,8 @@ namespace ChatServer
     public static class Logger
     {
         // 로그 파일 생성
-        static readonly string DirPath = Environment.CurrentDirectory + "/Logs";
+        //static readonly string DirPath = Environment.CurrentDirectory + "/logs";
+        static string DirPath = Constance.ENV_CHAT_SERVER_LOG_PATH;
         static readonly string FilePath = DirPath + "/" + DateTime.Today.ToString("yyyy-MM-dd") + ".log";
 
         public static void WriteLog(string str)
