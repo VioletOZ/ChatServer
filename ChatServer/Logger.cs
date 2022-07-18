@@ -21,7 +21,6 @@ namespace ChatServer
             try
             {
                 string FilePath = DirPath + "/" + DateTime.Today.ToString("yyyy-MM-dd") + ".log";
-                Console.WriteLine("DirPath : " + DirPath + "-" + "FilePath : " + FilePath);
                 
                 FileInfo fi = new FileInfo(FilePath);
 
