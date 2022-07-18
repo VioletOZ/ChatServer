@@ -18,7 +18,7 @@ WORKDIR "/src/"
 RUN dotnet build "ChatServer.csproj" -c Release -o /server
 
 # 마운트 설정
-VOLUME ["../data/ChatServer", "/server/logs"]
+VOLUME ["../data/ChatServer", "/server/log"]
 
 FROM build AS publish
 #RUN dotnet publish "ChatServer.csproj" -c Release -o /server/publish
@@ -28,7 +28,7 @@ WORKDIR /server
 
 # 환경변수 설정. 환경변수는 여기서 추가해야함. Dotnet 환경에서 override 시키는듯함
 ENV ENV_CHAT_SERVER_PORT 9000
-ENV ENV_CHAT_SERVER_LOG_PATH /server/logs
+ENV ENV_CHAT_SERVER_LOG_PATH /logs
 
 # 설정 파일 복사
 COPY ["cfg/dnsmasq.conf", "/etc/dnsmasq.conf"]
