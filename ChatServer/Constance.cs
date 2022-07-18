@@ -60,11 +60,20 @@ namespace ChatServer
 
     static class Constance
     {
-        public static readonly string ENV_CHAT_SERVER_PORT = Environment.GetEnvironmentVariable("ENV_CHAT_SERVER_PORT") == null ? "9000" : Environment.GetEnvironmentVariable("ENV_CHAT_SERVER_PORT");
+        // Game Server Redis
+        public static readonly string ENV_GAME_SERVER_REDIS_ADDR = Environment.GetEnvironmentVariable("ENV_GAME_SERVER_REDIS_ADDR");// == null ? "192.168.0.211" : Environment.GetEnvironmentVariable("ENV_GAME_SERVER_REDIS_ADDR");
+        public static readonly string ENV_GAME_SERVER_REDIS_PORT = Environment.GetEnvironmentVariable("ENV_GAME_SERVER_REDIS_PORT");// == null ? "6379" : Environment.GetEnvironmentVariable("ENV_GAME_SERVER_REDIS_PORT");
+
+        // Chat Server Redis
+        public static readonly string ENV_CHAT_SERVER_REDIS_ADDR = Environment.GetEnvironmentVariable("ENV_CHAT_SERVER_REDIS_ADDR");// == null ? "127.0.0.1" : Environment.GetEnvironmentVariable("ENV_CHAT_SERVER_REDIS_ADDR");
+        public static readonly string ENV_CHAT_SERVER_REDIS_PORT = Environment.GetEnvironmentVariable("ENV_CHAT_SERVER_REDIS_PORT");// == null ? "6379" : Environment.GetEnvironmentVariable("ENV_CHAT_SERVER_REDIS_PORT");
+
+        // Chat Server
+        public static readonly string ENV_CHAT_SERVER_PORT = Environment.GetEnvironmentVariable("ENV_CHAT_SERVER_PORT");// == null ? "9000" : Environment.GetEnvironmentVariable("ENV_CHAT_SERVER_LOG_PATH");
         public static readonly string ENV_CHAT_SERVER_LOG_PATH = Environment.GetEnvironmentVariable("ENV_CHAT_SERVER_LOG_PATH") == null ? "/server/log" : Environment.GetEnvironmentVariable("ENV_CHAT_SERVER_LOG_PATH");
 
-        public const int CHANNEL_PLAYER_MAX = 50;               // 채널당 최대인원 임시값
-        public const int CHANNEL_MAX = 9999;                    // 최대 채널갯수 임시값
+        public const int CHANNEL_PLAYER_MAX = 50;               // Max Player 
+        public const int CHANNEL_MAX = 9999;                    // Max Channel
         
         public const string NORMAL = "NORMAL";
         public const string GUILD = "GUILD";

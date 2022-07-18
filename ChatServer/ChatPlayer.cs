@@ -45,7 +45,7 @@ namespace ChatServer
 
         public async Task<bool> AuthVerify()
         {
-            var result = await RedisManager.Instance.AuthVerify(SessionState, SessionID);            
+            var result = await RedisManager.Instance.AuthVerify(SessionID);            
             if (!result)
                 return false;
             return true;

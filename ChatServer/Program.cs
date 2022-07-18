@@ -18,14 +18,40 @@ namespace ChatServer
         {
             //string ENV_CHAT_SERVER_PORT = Environment.GetEnvironmentVariable("ENV_CHAT_SERVER_PORT");
             //Logger.WriteLog("Server Port : " + ENV_CHAT_SERVER_PORT);
-            Logger.WriteLog("Server Port : " + Constance.ENV_CHAT_SERVER_PORT);
+            Logger.WriteLog("Server Port : " + Environment.GetEnvironmentVariable("ENV_CHAT_SERVER_REDIS_PORT"));
+
+            if (Constance.ENV_CHAT_SERVER_PORT == null)
+            {
+                Console.WriteLine("Env Server Port is Null");
+                Environment.Exit(0);
+            }
+
+            Console.WriteLine(Constance.ENV_CHAT_SERVER_REDIS_ADDR);
+            Console.WriteLine(Constance.ENV_CHAT_SERVER_REDIS_PORT);
+
+            Console.WriteLine(Constance.ENV_GAME_SERVER_REDIS_ADDR);
+            Console.WriteLine(Constance.ENV_GAME_SERVER_REDIS_PORT);
+
+            // 게임서버 레디스 접속
+            bool result = RedisManager.Instance.ConnectGameServerRedis();
+            if (!result)
+            {
+                Logger.WriteLog("GameServer Redis conn Fail");
+                Environment.Exit(0);
+            }
+
+            var pong = RedisManager.Instance.gameServerState.db.Ping();
+            Console.WriteLine(pong);
+
+            Logger.WriteLog("GameServer Redis Connect!!");
+
             Logger.WriteLog("ServerLog Path : " + Constance.ENV_CHAT_SERVER_LOG_PATH);
             // 웹소켓 초기화
             WebSocketServer webSocketServer = null;
             if (webSocketServer != null)
                 return;
 
-            webSocketServer = new WebSocketServer(Convert.ToInt32(Constance.ENV_CHAT_SERVER_PORT));
+            webSocketServer = new WebSocketServer(9000);
             webSocketServer.AddWebSocketService<Chat>("/Chat");
 
             //서버시작
@@ -43,8 +69,7 @@ namespace ChatServer
                 }
             }
 
-            Logger.WriteLog("ServerStart - " + ipAddr + ":" + webSocketServer.Port);            
-            Logger.WriteLog("ESC Exit");
+            Logger.WriteLog("ServerStart - " + ipAddr + ":" + webSocketServer.Port);
             while (true)
             {
                 //if (Console.KeyAvailable)

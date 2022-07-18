@@ -17,7 +17,7 @@ COPY . .
 WORKDIR "/src/"
 RUN dotnet build "ChatServer.csproj" -c Release -o /server
 
-# ¸¶¿îÆ® ¼³Á¤
+# ï¿½ï¿½ï¿½ï¿½Æ® ï¿½ï¿½ï¿½ï¿½
 VOLUME ["../data/ChatServer", "/server/log"]
 
 FROM build AS publish
@@ -26,11 +26,17 @@ FROM build AS publish
 FROM base AS final
 WORKDIR /server
 
-# È¯°æº¯¼ö ¼³Á¤. È¯°æº¯¼ö´Â ¿©±â¼­ Ãß°¡ÇØ¾ßÇÔ. Dotnet È¯°æ¿¡¼­ override ½ÃÅ°´ÂµíÇÔ
+# È¯ï¿½æº¯ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½. È¯ï¿½æº¯ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½â¼­ ï¿½ß°ï¿½ï¿½Ø¾ï¿½ï¿½ï¿½. Dotnet È¯ï¿½æ¿¡ï¿½ï¿½ override ï¿½ï¿½Å°ï¿½Âµï¿½ï¿½ï¿½
 ENV ENV_CHAT_SERVER_PORT 9000
 ENV ENV_CHAT_SERVER_LOG_PATH /logs
+# ChatServer
+ENV ENV_CHAT_SERVER_REDIS_ADDR 192.168.0.42
+ENV ENV_CHAT_SERVER_REDIS_PORT 6379
+# GameServer
+ENV ENV_GAME_SERVER_REDIS_ADDR 192.168.0.211
+ENV ENV_GAME_SERVER_REDIS_PORT 6379
 
-# ¼³Á¤ ÆÄÀÏ º¹»ç
+# ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 COPY ["cfg/dnsmasq.conf", "/etc/dnsmasq.conf"]
 COPY ["cfg/sysctl.conf", "/etc/sysctl.conf"]
 COPY ["cfg/limits.conf", "/etc/security/limits.conf"]

@@ -55,13 +55,18 @@ namespace ChatServer
         private Dictionary<string, List<ChatUserData>> _subChannelDict = new Dictionary<string, List<ChatUserData>>(); // 구독중인 채널, Client Session
         private MessageQueue _messageQueue = new MessageQueue();
 
+        public ConnectionMultiplexer gameServerRedis = null;
+        public SessionState gameServerState = new SessionState();
+
         public RedisManager()
         {
-            _env = Environment.GetEnvironmentVariable("RedisConnection", EnvironmentVariableTarget.Process);
-            if (_env == null)
+            //_env = Environment.GetEnvironmentVariable("RedisConnection", EnvironmentVariableTarget.Process);
+            _env = Constance.ENV_CHAT_SERVER_REDIS_ADDR + ":" + Constance.ENV_CHAT_SERVER_REDIS_PORT;
+            // 채팅서버 레디스
+            if (Constance.ENV_CHAT_SERVER_REDIS_ADDR == null || Constance.ENV_CHAT_SERVER_REDIS_PORT == null)
             {
-                Logger.WriteLog("ALARM - Localhost RedisConnection");
-                _env = "localhost:6379";
+                Logger.WriteLog("ChatServer Redis Connection Fail..");
+                Environment.Exit(0);
             }
 
             //_multiplexer = ConnectionMultiplexer.Connect(_env);
@@ -69,22 +74,66 @@ namespace ChatServer
             //_subscriber = _multiplexer.GetSubscriber();
             //_db = _multiplexer.GetDatabase();
 
-
             _connectionPool = new ConnectionMultiplexer[Constance.POOL_SIZE];
             _redisConfigurationOptions = ConfigurationOptions.Parse(_env);
 
         }
 
+        public bool ConnectGameServerRedis()
+        {
+            try
+            {
+                ConfigurationOptions redisConf;                
+
+                string redisAddr = Constance.ENV_GAME_SERVER_REDIS_ADDR;
+                string redisPort = Constance.ENV_GAME_SERVER_REDIS_PORT;
+
+                // 게임서버 레디스
+                if (redisAddr == null || redisPort == null)
+                {
+                    Logger.WriteLog("GameServer Redis Unknown Addr or Port..");
+                    Environment.Exit(0);
+                }
+
+
+                redisConf = ConfigurationOptions.Parse(redisAddr + ":" + redisPort);
+                if (redisConf == null)
+                {
+                    Logger.WriteLog("GameServer Redis Parse Error..");
+                    Environment.Exit(0);
+                }
+
+                redisConf.AbortOnConnectFail = false;
+
+                this.gameServerRedis = ConnectionMultiplexer.Connect(redisConf);
+                this.gameServerState.ServerSessionID = "Main";
+                this.gameServerState.db = gameServerRedis.GetDatabase();
+                this.gameServerState.subscriber = gameServerRedis.GetSubscriber();
+
+                if (this.gameServerRedis == null)
+                {
+                    Logger.WriteLog("GameServer Redis Connection Fail..");
+                    Environment.Exit(0);
+                }
+            }
+            catch (Exception)
+            {
+                Logger.WriteLog("GameServer Redis Error");
+                Environment.Exit(0);
+            }
+            return true;
+        }
 
         // 레디스 Session 검증 - 서버에서 접속시 등록된 Session으로 허용된 접근인지 확인
-        public async Task<bool> AuthVerify(SessionState conn, string SessionID)
+        public async Task<bool> AuthVerify(string SessionID)
         {
             try
             {
                 Logger.WriteLog("Enter - " + SessionID);
-                var result = await conn.db.KeyExistsAsync("Session:" + SessionID);
-                if (result)
-                    return true;
+                var result = await gameServerState.db.KeyExistsAsync("Session:" + SessionID);
+                //var result = await conn.db.KeyExistsAsync("Session:" + SessionID);
+                if (!result)
+                    return false;
             }
             catch (Exception e)
             {

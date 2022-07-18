@@ -10,6 +10,10 @@ services:
       environment:
         - ENV_CHAT_SERVER_PORT=9000
         - ENV_CHAT_SERVER_LOG_PATH=/log
+        - ENV_CHAT_SERVER_REDIS_ADDR=192.168.0.42
+        - ENV_CHAT_SERVER_REDIS_PORT=6379
+        - ENV_GAME_SERVER_REDIS_ADDR=192.168.0.211
+        - ENV_GAME_SERVER_REDIS_PORT=6379
         - RedisConnection=chat_redis
       volumes:
         - "../data/ChatServer:/server/log"
