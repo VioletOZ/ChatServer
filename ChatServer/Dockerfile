@@ -6,10 +6,10 @@ WORKDIR /server
 
 FROM mcr.microsoft.com/dotnet/sdk:5.0 AS build
 WORKDIR /src
-#EXPOSE 80 443 9000
+EXPOSE 80 443 9000
 
-RUN apt update
-RUN apt install procps -y
+RUN apt-get update
+RUN apt-get install procps -y
 
 COPY ["ChatServer.csproj", "/src/"]
 RUN dotnet restore "/src/ChatServer.csproj"
@@ -30,7 +30,7 @@ WORKDIR /server
 ENV ENV_CHAT_SERVER_PORT 9000
 ENV ENV_CHAT_SERVER_LOG_PATH /logs
 # ChatServer
-ENV ENV_CHAT_SERVER_REDIS_ADDR ec2-3-35-197-81.ap-northeast-2.compute.amazonaws.com
+ENV ENV_CHAT_SERVER_REDIS_ADDR 172.31.39.146
 ENV ENV_CHAT_SERVER_REDIS_PORT 6379
 # GameServer
 ENV ENV_GAME_SERVER_REDIS_ADDR 192.168.0.211
