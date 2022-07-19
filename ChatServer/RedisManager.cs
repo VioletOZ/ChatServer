@@ -355,7 +355,7 @@ namespace ChatServer
                 {
                     _redisConfigurationOptions.AbortOnConnectFail = false;
                     _connectionPool[i] = await ConnectionMultiplexer.ConnectAsync(_redisConfigurationOptions);
-                    if (i % 100  < 2)
+                    if (i % 100  < 5)
                         Logger.WriteLog("Redis Subscriber Count : " + i);
                     return _connectionPool[i].GetSubscriber();
                 }
