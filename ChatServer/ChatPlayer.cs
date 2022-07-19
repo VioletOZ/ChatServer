@@ -41,6 +41,7 @@ namespace ChatServer
             this.SessionState.ServerSessionID = sessionId+":"+uid;
             this.SessionState.subscriber = RedisManager.Instance.GetSubscriberAsync().Result;
             this.SessionState.db = RedisManager.Instance.GetDatabaseAsync().Result;
+
         }
 
         public async Task<bool> AuthVerify()
@@ -265,6 +266,8 @@ namespace ChatServer
 
             await RedisManager.Instance.UnSubscribe(SessionState, Constance.SYSTEM, UserData.UserUID);
             await RedisManager.Instance.UnSubscribe(SessionState, Constance.GM_NOTICE, UserData.UserUID);
+
+            SessionState = null;
         }
 
         public async Task<bool> EnterUserChannel(CHAT_TYPE type)

@@ -58,6 +58,7 @@ namespace ChatServer
         public ConnectionMultiplexer gameServerRedis = null;
         public SessionState gameServerState = new SessionState();
 
+
         public RedisManager()
         {
             //_env = Environment.GetEnvironmentVariable("RedisConnection", EnvironmentVariableTarget.Process);
@@ -73,6 +74,25 @@ namespace ChatServer
 
             //_subscriber = _multiplexer.GetSubscriber();
             //_db = _multiplexer.GetDatabase();
+
+            int minWorker, minIOC;
+            // Get the current settings.            
+            ThreadPool.GetMinThreads(out minWorker, out minIOC);
+            // Change the minimum number of worker threads to four, but
+            // keep the old setting for minimum asynchronous I/O 
+            // completion threads.
+            Logger.WriteLog("MinWorker : "+minWorker + "-"+minIOC);
+            if (ThreadPool.SetMinThreads(1000, 1000))
+            {
+                ThreadPool.GetMinThreads(out minWorker, out minIOC);
+                Logger.WriteLog("MinWorker : " + minWorker + "-" + minIOC);
+                // The minimum number of threads was set successfully.
+            }
+            else
+            {
+                // The minimum number of threads was not changed.
+            }
+
 
             _connectionPool = new ConnectionMultiplexer[Constance.POOL_SIZE];
             _redisConfigurationOptions = ConfigurationOptions.Parse(_env);
@@ -153,6 +173,9 @@ namespace ChatServer
                 return true;
 
             _subChannelDict[channel].Add(user);
+
+            if (conn == null)
+                return false;
 
             await conn.subscriber.SubscribeAsync(channel, ac);
             
