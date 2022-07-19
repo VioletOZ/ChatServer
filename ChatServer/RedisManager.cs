@@ -237,6 +237,7 @@ namespace ChatServer
                     //new HashEntry("data", message.LogData.UserName + message.LogData.Text)
                 };
 
+                // 길드 채팅 저장
                 _ = conn.db.HashSetAsync(Constance.LOG + channel, hash);
                 _ = conn.db.KeyExpireAsync(Constance.LOG, DateTime.Now.AddDays(7));
             }
@@ -355,6 +356,8 @@ namespace ChatServer
                 {
                     _redisConfigurationOptions.AbortOnConnectFail = false;
                     _connectionPool[i] = await ConnectionMultiplexer.ConnectAsync(_redisConfigurationOptions);
+                    Logger.WriteLog("========================================================");
+                    Logger.WriteLog("Redis Subscriber Count : i");
                     return _connectionPool[i].GetSubscriber();
                 }
 
