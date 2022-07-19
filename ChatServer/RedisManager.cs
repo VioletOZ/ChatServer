@@ -350,13 +350,13 @@ namespace ChatServer
 
             for (int i = 0; i < _connectionPool.Length; i++)
             {
-                var connection = _connectionPool[i];
-                Logger.WriteLog("========================================================");
-                Logger.WriteLog("Redis Subscriber Count : " + i);
+                var connection = _connectionPool[i];                
                 if (connection == null)
                 {
                     _redisConfigurationOptions.AbortOnConnectFail = false;
-                    _connectionPool[i] = await ConnectionMultiplexer.ConnectAsync(_redisConfigurationOptions);                    
+                    _connectionPool[i] = await ConnectionMultiplexer.ConnectAsync(_redisConfigurationOptions);
+                    Logger.WriteLog("========================================================");
+                    Logger.WriteLog("Redis Subscriber Count : " + i);
                     return _connectionPool[i].GetSubscriber();
                 }
 
