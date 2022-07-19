@@ -383,13 +383,13 @@ namespace ChatServer
             // 접속시에 유저정보 세팅
             m_ChatPlayer = new ChatPlayer(sessionId, uid, name, guildId, charId);
 
-            var result = await m_ChatPlayer.AuthVerify();
-            if (!result)
-            {
-                Logger.WriteLog("세션 인증실패 - SessionID : " + sessionId + " " + uid + name);
-                Close(CloseStatusCode.ServerError, "InvalidData");
-                return false;
-            }
+            //var result = await m_ChatPlayer.AuthVerify();            
+            //if (!result)
+            //{
+            //    Logger.WriteLog("세션 인증실패 - SessionID : " + sessionId + " " + uid + name);
+            //    Close(CloseStatusCode.ServerError, "InvalidData");
+            //    return false;
+            //}
 
             // 시스템, Notice 구독
             if (!await m_ChatPlayer.EnterChannel(CHAT_TYPE.CT_SYSTEM, 0, OnRedisMessageHandler))
@@ -399,6 +399,7 @@ namespace ChatServer
 
             // 접속시에 일반 채널 구독            
             int channelNum = 1;
+            var result = true;
             result = await m_ChatPlayer.EnterChannel(CHAT_TYPE.CT_NORMAL, channelNum, OnRedisMessageHandler);
             if(!result)
             {
