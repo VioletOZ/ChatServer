@@ -26,17 +26,17 @@ FROM build AS publish
 FROM base AS final
 WORKDIR /server
 
-# ȯ�溯�� ����. ȯ�溯���� ���⼭ �߰��ؾ���. Dotnet ȯ�濡�� override ��Ű�µ���
+# 환경변수는 여기서부터 정의 한다. Dotnet 환경에서 override 됨
 ENV ENV_CHAT_SERVER_PORT 9000
 ENV ENV_CHAT_SERVER_LOG_PATH /logs
 # ChatServer
-ENV ENV_CHAT_SERVER_REDIS_ADDR 192.168.32.1
+ENV ENV_CHAT_SERVER_REDIS_ADDR ec2-3-35-197-81.ap-northeast-2.compute.amazonaws.com
 ENV ENV_CHAT_SERVER_REDIS_PORT 6379
 # GameServer
 ENV ENV_GAME_SERVER_REDIS_ADDR 192.168.0.211
 ENV ENV_GAME_SERVER_REDIS_PORT 6379
 
-# ���� ���� ����
+# 설정파일들
 COPY ["cfg/dnsmasq.conf", "/etc/dnsmasq.conf"]
 COPY ["cfg/sysctl.conf", "/etc/sysctl.conf"]
 COPY ["cfg/limits.conf", "/etc/security/limits.conf"]
