@@ -16,10 +16,6 @@ namespace ChatServer
     {
         static void Main(string[] args)
         {
-            //string ENV_CHAT_SERVER_PORT = Environment.GetEnvironmentVariable("ENV_CHAT_SERVER_PORT");
-            //Logger.WriteLog("Server Port : " + ENV_CHAT_SERVER_PORT);
-            Logger.WriteLog("Server Port : " + Environment.GetEnvironmentVariable("ENV_CHAT_SERVER_REDIS_PORT"));
-
             if (Constance.ENV_CHAT_SERVER_PORT == null)
             {
                 Console.WriteLine("Env Server Port is Null");
