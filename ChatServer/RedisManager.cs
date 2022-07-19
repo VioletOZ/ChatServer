@@ -82,7 +82,7 @@ namespace ChatServer
             // keep the old setting for minimum asynchronous I/O 
             // completion threads.
             Logger.WriteLog("MinWorker : "+minWorker + "-"+minIOC);
-            if (ThreadPool.SetMinThreads(1000, 1000))
+            if (ThreadPool.SetMinThreads(1000, minIOC))
             {
                 ThreadPool.GetMinThreads(out minWorker, out minIOC);
                 Logger.WriteLog("MinWorker : " + minWorker + "-" + minIOC);
