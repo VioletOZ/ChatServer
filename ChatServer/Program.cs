@@ -68,6 +68,8 @@ namespace ChatServer
             Logger.WriteLog("ServerStart - " + ipAddr + ":" + webSocketServer.Port);
             while (true)
             {
+
+                Thread.Sleep(1000);
                 //if (Console.KeyAvailable)
                 //{
                 //    var keyInfo = Console.ReadKey();
