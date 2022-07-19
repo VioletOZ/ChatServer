@@ -32,18 +32,18 @@ namespace ChatServer
             Console.WriteLine(Constance.ENV_GAME_SERVER_REDIS_ADDR);
             Console.WriteLine(Constance.ENV_GAME_SERVER_REDIS_PORT);
 
-            // 게임서버 레디스 접속
-            bool result = RedisManager.Instance.ConnectGameServerRedis();
-            if (!result)
-            {
-                Logger.WriteLog("GameServer Redis conn Fail");
-                Environment.Exit(0);
-            }
+            // 게임서버 레디스 임시로 막아둠 ... Chat/AuthVerify 도 막아둠 
+            // 게임서버 레디스 접속 
+            //bool result = RedisManager.Instance.ConnectGameServerRedis();
+            //if (!result)
+            //{
+            //    Logger.WriteLog("GameServer Redis conn Fail");
+            //    Environment.Exit(0);
+            //}
 
-            var pong = RedisManager.Instance.gameServerState.db.Ping();
-            Console.WriteLine(pong);
-
-            Logger.WriteLog("GameServer Redis Connect!!");
+            //var pong = RedisManager.Instance.gameServerState.db.Ping();
+            //Console.WriteLine(pong);
+            //Logger.WriteLog("GameServer Redis Connect!!");
 
             Logger.WriteLog("ServerLog Path : " + Constance.ENV_CHAT_SERVER_LOG_PATH);
             // 웹소켓 초기화
