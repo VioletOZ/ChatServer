@@ -105,10 +105,10 @@ namespace ChatServer
 
                 redisConf.AbortOnConnectFail = false;
 
-                this.gameServerRedis = ConnectionMultiplexer.Connect(redisConf);
-                this.gameServerState.ServerSessionID = "Main";
-                this.gameServerState.db = gameServerRedis.GetDatabase();
-                this.gameServerState.subscriber = gameServerRedis.GetSubscriber();
+                //this.gameServerRedis = ConnectionMultiplexer.Connect(redisConf);
+                //this.gameServerState.ServerSessionID = "Main";
+                //this.gameServerState.db = gameServerRedis.GetDatabase();
+                //this.gameServerState.subscriber = gameServerRedis.GetSubscriber();
 
                 if (this.gameServerRedis == null)
                 {
@@ -351,13 +351,12 @@ namespace ChatServer
             for (int i = 0; i < _connectionPool.Length; i++)
             {
                 var connection = _connectionPool[i];
-
+                Logger.WriteLog("========================================================");
+                Logger.WriteLog("Redis Subscriber Count : " + i);
                 if (connection == null)
                 {
                     _redisConfigurationOptions.AbortOnConnectFail = false;
-                    _connectionPool[i] = await ConnectionMultiplexer.ConnectAsync(_redisConfigurationOptions);
-                    Logger.WriteLog("========================================================");
-                    Logger.WriteLog("Redis Subscriber Count : " + i );
+                    _connectionPool[i] = await ConnectionMultiplexer.ConnectAsync(_redisConfigurationOptions);                    
                     return _connectionPool[i].GetSubscriber();
                 }
 
