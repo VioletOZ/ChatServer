@@ -46,8 +46,9 @@ namespace ChatServer
                 }
         };
 
-        private readonly ConnectionMultiplexer[] _connectionPool;
-        private readonly ConfigurationOptions _redisConfigurationOptions;
+        private ConnectionMultiplexer[] _connectionPool;
+        private Dictionary<string, List<int>> multiPlexerMap = new Dictionary<string, List<int>>();
+        private ConfigurationOptions _redisConfigurationOptions;
 
         private string _env { get; }
 
@@ -213,7 +214,7 @@ namespace ChatServer
         // Redis Pub
         public async Task Publish(SessionState conn, string channel, req_ChatMessage message)
         {
-            Logger.WriteLog("Publish Message Type : " + message.ChatType +"-" +channel);
+            Logger.WriteLog("Publish Message Channel : " + channel);
 
             // TODO: 보내기전에 Connect 확인
             //if (!isConnected)
@@ -278,6 +279,7 @@ namespace ChatServer
                         return true;
                     }
                 }
+                return true;
             }
 
             return false;
@@ -348,7 +350,7 @@ namespace ChatServer
 
         }
 
-        public async Task<ISubscriber> GetSubscriberAsync()
+        public async Task<ISubscriber> GetSubscriberAsync(string ID)
         {
             var leastPendingTasks = long.MaxValue;
             ISubscriber leastPendingDatabase = null;
@@ -359,9 +361,15 @@ namespace ChatServer
                 if (connection == null)
                 {
                     _redisConfigurationOptions.AbortOnConnectFail = false;
+                    _redisConfigurationOptions.ConnectTimeout = Constance.CONNECT_TIME_OUT;
+                    _redisConfigurationOptions.AsyncTimeout = Constance.CONNECT_TIME_OUT;
                     _connectionPool[i] = await ConnectionMultiplexer.ConnectAsync(_redisConfigurationOptions);
-                    if (i % 100  < 5)
-                        Logger.WriteLog("Redis Subscriber Count : " + i);
+
+                    if (!multiPlexerMap.ContainsKey(ID))
+                        multiPlexerMap.Add(ID, new List<int>());
+                    multiPlexerMap[ID].Add(i);
+                    if (i % 100  < 1)
+                        Logger.WriteLog("Redis Connect Count : " + i);
                     return _connectionPool[i].GetSubscriber();
                 }
 
@@ -376,7 +384,7 @@ namespace ChatServer
             return leastPendingDatabase;
         }
 
-        public async Task<IDatabase> GetDatabaseAsync()
+        public async Task<IDatabase> GetDatabaseAsync(string ID)
         {
             var leastPendingTasks = long.MaxValue;
             IDatabase leastPendingDatabase = null;
@@ -387,7 +395,17 @@ namespace ChatServer
 
                 if (connection == null)
                 {
+                    _redisConfigurationOptions.AbortOnConnectFail = false;
+                    _redisConfigurationOptions.ConnectTimeout = Constance.CONNECT_TIME_OUT;
+                    _redisConfigurationOptions.AsyncTimeout = Constance.CONNECT_TIME_OUT;
+
                     _connectionPool[i] = await ConnectionMultiplexer.ConnectAsync(_redisConfigurationOptions);
+
+                    if (!multiPlexerMap.ContainsKey(ID))
+                        multiPlexerMap.Add(ID, new List<int>());
+                    multiPlexerMap[ID].Add(i);
+                    if (i % 100  < 1)
+                        Logger.WriteLog("Redis Connect Count : " + i);
                     return _connectionPool[i].GetDatabase();
                 }
 
@@ -401,6 +419,34 @@ namespace ChatServer
             }
 
             return leastPendingDatabase;
+        }
+
+        public void CloseRedisConnect(string ID)
+        {
+            if (multiPlexerMap.ContainsKey(ID))
+            {
+                List<int> redisConnIndexList = multiPlexerMap[ID];
+                foreach (var index in redisConnIndexList)
+                {
+                    _connectionPool[index].Dispose();
+                    _connectionPool[index] = null;
+                }
+
+                multiPlexerMap.Remove(ID);
+
+                foreach (var entry in _subChannelDict)
+                {
+                    for (int i = 0; i < entry.Value.Count; i++)
+                    {
+                        if (entry.Value[i].ID == ID)
+                        {
+                            _subChannelDict[entry.Key].RemoveAt(i);
+                        }
+                            
+                    }
+                }
+
+            }
         }
     }
 

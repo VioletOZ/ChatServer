@@ -385,12 +385,14 @@ namespace ChatServer
             {
                 // 정상적인 종료가 아닐경우 세션이 없다...
                 Logger.WriteLog("OnClose Message : " + e.Message);
+                RedisManager.Instance.CloseRedisConnect(ID);
             }
         }
 
-        protected override void OnError(WebSocketSharp.ErrorEventArgs e)
+        protected override async void OnError(WebSocketSharp.ErrorEventArgs e)
         {
             Logger.WriteLog("OnError : " + e.Message);
+            RedisManager.Instance.CloseRedisConnect(ID);
             base.OnError(e);
         }
 
@@ -401,7 +403,7 @@ namespace ChatServer
                 Logger.WriteLog("Chat InitClient ChatPlayer not null : " + ID);
             
             // 접속시에 유저정보 세팅
-            m_ChatPlayer = new ChatPlayer(sessionId, uid, name, guildId, charId);
+            m_ChatPlayer = new ChatPlayer(ID, sessionId, uid, name, guildId, charId);
 
             //var result = await m_ChatPlayer.AuthVerify();            
             //if (!result)

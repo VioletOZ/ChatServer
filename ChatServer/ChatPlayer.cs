@@ -14,6 +14,7 @@ namespace ChatServer
     // 채널서버에 접속한 개별 플레이어 관리
     class ChatPlayer
     {
+        public string ID { get; set; }
         public string SessionID { get; set; }
         public int GuildID { get; set; }                       // 
         public Dictionary<CHAT_TYPE, int> channelDict = new Dictionary<CHAT_TYPE, int>();        // 현재 참여중인 채널 <채널이름, 채널번호>
@@ -27,10 +28,11 @@ namespace ChatServer
         // 1:1 대화등의 메시지 저장용
         public Dictionary<string, BlockingCollection<string>> WhisperMessage { get; set; }
 
-        public ChatPlayer(string sessionId, long uid, string name, int guildId, int charId)
+        public ChatPlayer(string ID, string sessionId, long uid, string name, int guildId, int charId)
         {
             this.SessionID = sessionId;
             this.GuildID = guildId;
+            this.UserData.ID = ID;
             this.UserData.UserUID = uid;
             this.UserData.UserName = name;
             this.UserData.CharacterID = charId;
@@ -39,8 +41,8 @@ namespace ChatServer
             this.GuildChannel = 0;
 
             this.SessionState.ServerSessionID = sessionId+":"+uid;
-            this.SessionState.subscriber = RedisManager.Instance.GetSubscriberAsync().Result;
-            this.SessionState.db = RedisManager.Instance.GetDatabaseAsync().Result;
+            this.SessionState.subscriber = RedisManager.Instance.GetSubscriberAsync(ID).Result;
+            this.SessionState.db = RedisManager.Instance.GetDatabaseAsync(ID).Result;
 
         }
 
@@ -194,7 +196,7 @@ namespace ChatServer
                     break;
             }
 
-            Logger.WriteLog("EnterChannel : " + ch + "-" + UserData.UserUID + "-");
+            Logger.WriteLog("EnterChannel : " + ch + "-" + UserData.UserUID);
             if (!await RedisManager.Instance.SubscribeAction(SessionState, ch, UserData, action))
                 Logger.WriteLog("ChatPlayer EnterChannel Subscribe Fail : " + ch);
 

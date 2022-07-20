@@ -8,6 +8,7 @@ namespace ChatServer
 {
     public class ChatUserData
     {
+        public string ID { get; set; }
         public long UserUID { get; set; }
         public string UserName { get; set; }
         public int CharacterID { get; set; }
