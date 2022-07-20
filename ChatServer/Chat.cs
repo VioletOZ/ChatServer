@@ -100,7 +100,6 @@ namespace ChatServer
                     return;
                 }
 
-                Logger.WriteLog("Connect Client Info : " + sessionID +"-"+ UID + "-" + name + "-" + charID + "-" + guildID);
                 var result = await InitClient(sessionID, UID, name, charID, guildID);
                 if (!result)
                 {
@@ -380,6 +379,7 @@ namespace ChatServer
 
                 Logger.WriteLog("Session Close Count : " + Sessions.Count);
                 CloseAsync();
+                await RedisManager.Instance.CloseRedisConnect(ID);
             }
             catch (Exception e)
             {
