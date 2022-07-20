@@ -41,6 +41,25 @@ namespace ChatServer
             //Console.WriteLine(pong);
             //Logger.WriteLog("GameServer Redis Connect!!");
 
+            int minWorker, minIOC;
+            // Get the current settings.            
+            ThreadPool.GetMinThreads(out minWorker, out minIOC);
+            // Change the minimum number of worker threads to four, but
+            // keep the old setting for minimum asynchronous I/O 
+            // completion threads.
+            Logger.WriteLog("MinWorker : " + minWorker + "-" + minIOC);
+            if (ThreadPool.SetMinThreads(100, 10))
+            {
+                ThreadPool.GetMinThreads(out minWorker, out minIOC);
+                Logger.WriteLog("MinWorker : " + minWorker + "-" + minIOC);
+                // The minimum number of threads was set successfully.
+            }
+            else
+            {
+                // The minimum number of threads was not changed.
+            }
+
+
             Logger.WriteLog("ServerLog Path : " + Constance.ENV_CHAT_SERVER_LOG_PATH);
             // 웹소켓 초기화
             WebSocketServer webSocketServer = null;
