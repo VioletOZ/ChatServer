@@ -100,6 +100,7 @@ namespace ChatServer
                     return;
                 }
 
+                Logger.WriteLog("Connect Client Info : " + sessionID +"-"+ UID + "-" + name + "-" + charID + "-" + guildID);
                 var result = await InitClient(sessionID, UID, name, charID, guildID);
                 if (!result)
                 {
@@ -377,8 +378,8 @@ namespace ChatServer
                 //    Context.WebSocket.Connect();
                 //}
 
-                CloseAsync();
                 Logger.WriteLog("Session Close Count : " + Sessions.Count);
+                CloseAsync();
             }
             catch (Exception e)
             {
@@ -409,6 +410,12 @@ namespace ChatServer
             //    Close(CloseStatusCode.ServerError, "InvalidData");
             //    return false;
             //}
+            
+            if (OnRedisMessageHandler == null)
+            {
+                Logger.WriteLog("Client Init Fail RedisHandler Create Fail : " + ID);
+                return false;
+            }
 
             // 시스템, Notice 구독
             if (!await m_ChatPlayer.EnterChannel(CHAT_TYPE.CT_SYSTEM, 0, OnRedisMessageHandler))

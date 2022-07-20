@@ -194,7 +194,7 @@ namespace ChatServer
                     break;
             }
 
-            Logger.WriteLog("EnterChannel : " + ch);
+            Logger.WriteLog("EnterChannel : " + ch + "-" + UserData.UserUID + "-");
             if (!await RedisManager.Instance.SubscribeAction(SessionState, ch, UserData, action))
                 Logger.WriteLog("ChatPlayer EnterChannel Subscribe Fail : " + ch);
 
