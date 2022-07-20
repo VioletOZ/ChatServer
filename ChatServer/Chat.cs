@@ -18,6 +18,7 @@ namespace ChatServer
     class Chat : WebSocketBehavior
     {
         private string _suffix;
+        private BlockingCollection<string> outQueue = new BlockingCollection<string>();
         // Redis 구독메시지올경우 메시지 처리
         private Action<RedisChannel, RedisValue> m_onRedisMessageHandler = null;
         public Action<RedisChannel, RedisValue> OnRedisMessageHandler
@@ -43,6 +44,13 @@ namespace ChatServer
                     new JsonStringEnumConverter()
                 }
         };
+
+        enum SslProtocolHack
+        {
+            Tls = 192,
+            Tls11 = 768,
+            Tls12 = 3072
+        }
 
         //private BlockingCollection<string> _blockQueue;
         public MessageQueue m_MessageQueue;
@@ -76,16 +84,16 @@ namespace ChatServer
             try 
             {
                 // Redis 에서 해당유저 UID로 세션 검색.
-                string sessionID = this.Headers.Get("SessionID") ?? null;               //SessionID
+                string sessionID = this.Headers.Get("SessionID") ?? "";               //SessionID
                 long UID = 0;
                 Int64.TryParse(this.Headers.Get("UserUID"), out UID);                   //UserUID
-                string name = this.Headers.Get("UserName") ?? null;                     //Name - Redis에 없음
+                string name = this.Headers.Get("UserName") ?? "";                     //Name - Redis에 없음
                 int guildID = 0;
                 Int32.TryParse(this.Headers.Get("GuildID"), out guildID);
                 int charID = 0;
                 Int32.TryParse(this.Headers.Get("FavoriteCharacterID"), out charID);
 
-                if (sessionID == null || UID == 0 || name == null)
+                if (sessionID == "" || UID == 0 || name == "")
                 {
                     Logger.WriteLog("Chat OnOpen Request Header(Session) Error. SessionID : " + sessionID + " UID : " + UID);
                     CloseAsync();
@@ -347,6 +355,7 @@ namespace ChatServer
             // 레디스에서 세션확인 해야함
             // 지금은 일단 그냥 접속종료
 
+            
             try
             {
                 Logger.WriteLog("OnClose : " + ID);
@@ -355,9 +364,19 @@ namespace ChatServer
                 {
                     await m_ChatPlayer.LeaveAllChannel();                    
                 }
-                
+
                 //_ = RedisManager.Instance.UnSubscribe(m_ChatPlayer.GetNormalChannel(), m_ChatPlayer.UserData);
                 //_ = RedisManager.Instance.UnSubscribe(m_ChatPlayer.GetGuildChannel(), m_ChatPlayer.UserData);
+
+                //var sslProtocol = (System.Security.Authentication.SslProtocols)(SslProtocolHack.Tls12 | SslProtocolHack.Tls11 | SslProtocolHack.Tls);
+
+                // TLS 핸드세이크 오류 발생시 프로토콜 변경하여 재접속 처리\
+                //if (args.Code == 1015 && Context.WebSocket.SslConfiguration.EnabledSslProtocols != sslProtocol)
+                //{
+                //    Context.WebSocket.SslConfiguration.EnabledSslProtocols = sslProtocol;
+                //    Context.WebSocket.Connect();
+                //}
+
                 CloseAsync();
                 Logger.WriteLog("Session Close Count : " + Sessions.Count);
             }
