@@ -232,7 +232,7 @@ namespace ChatServer
                     return false;
             }
 
-            if (!await RedisManager.Instance.UnSubscribe(SessionState, channel, UserData.UserUID))
+            if (!await RedisManager.Instance.UnSubscribe(SessionState, channel, UserData.ID))
                 return false;
 
             //await UserStateChannel(CHAT_ENTER_STATE.CT_ENTER, type, channel);
@@ -267,13 +267,13 @@ namespace ChatServer
         public async Task LeaveAllChannel()
         {
             //channelDict.AsParallel().ForAll(entry => Task.Run(() => RedisManager.Instance.UnSubscribe(entry.Key.ToString() + entry.Value, this.SessionID)));
-            await RedisManager.Instance.UnSubscribe(SessionState, GetNormalChannel(), UserData.UserUID);
+            await RedisManager.Instance.UnSubscribe(SessionState, GetNormalChannel(), UserData.ID);
 
             if (GuildChannel > 0)
-                await RedisManager.Instance.UnSubscribe(SessionState, GetGuildChannel(), UserData.UserUID);
+                await RedisManager.Instance.UnSubscribe(SessionState, GetGuildChannel(), UserData.ID);
 
-            await RedisManager.Instance.UnSubscribe(SessionState, Constance.SYSTEM, UserData.UserUID);
-            await RedisManager.Instance.UnSubscribe(SessionState, Constance.GM_NOTICE, UserData.UserUID);
+            await RedisManager.Instance.UnSubscribe(SessionState, Constance.SYSTEM, UserData.ID);
+            await RedisManager.Instance.UnSubscribe(SessionState, Constance.GM_NOTICE, UserData.ID);
 
             SessionState = null;
         }
@@ -331,7 +331,7 @@ namespace ChatServer
 
         public async Task<bool> ReceiveEnd()
         {
-            if (!await RedisManager.Instance.UnSubscribe(SessionState, GetNormalChannel(), UserData.UserUID))
+            if (!await RedisManager.Instance.UnSubscribe(SessionState, GetNormalChannel(), UserData.ID))
                 return false;
 
             return true;

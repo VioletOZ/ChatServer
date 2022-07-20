@@ -152,7 +152,7 @@ namespace ChatServer
             if (!_subChannelDict.ContainsKey(channel))
                 _subChannelDict.Add(channel, new List<ChatUserData>());
 
-            if (IsSubscribe(channel, user.UserUID))
+            if (IsSubscribe(channel, user.ID))
                 return true;
 
             _subChannelDict[channel].Add(user);
@@ -165,11 +165,15 @@ namespace ChatServer
             return true;
         }
 
-        public bool IsSubscribe(string channel, long uid)
+        public bool IsSubscribe(string channel, string ID)
         {
-            foreach (var d in _subChannelDict[channel])
+            foreach (var user in _subChannelDict[channel])
             {
-                if (d.UserUID == uid)
+                // 유저 정보가없다!?
+                if (user == null)
+                    continue;
+
+                if (user.ID == ID)
                     return true;
             }
             return false;
@@ -261,7 +265,7 @@ namespace ChatServer
             await conn.subscriber.PublishAsync(channel, EncodingJson.Serialize(notiMessage));
         }
 
-        public async Task<bool> UnSubscribe(SessionState conn, string channel, long userUid)
+        public async Task<bool> UnSubscribe(SessionState conn, string channel, string ID)
         {
             await conn.subscriber.UnsubscribeAsync(channel);
 
@@ -272,7 +276,7 @@ namespace ChatServer
                     // 등록이안되었거나 이미 삭제했음 !
                     if (_subChannelDict[channel].ElementAtOrDefault(i) == null)
                         return true;
-                    if (_subChannelDict[channel][i].UserUID == userUid)
+                    if (_subChannelDict[channel][i].ID == ID)
                     {
                         _subChannelDict[channel].RemoveAt(i);
 
@@ -339,9 +343,9 @@ namespace ChatServer
             return logs;
         }
 
-        public async Task GetUserHash(SessionState conn, string userUID)
+        public async Task GetUserHash(SessionState conn, string ID)
         {
-            var val = await conn.db.HashGetAsync("User:" + userUID, "User");
+            var val = await conn.db.HashGetAsync("User:" + ID, "User");
             Logger.WriteLog("GetHash" + val);
 
         }
