@@ -392,7 +392,9 @@ namespace ChatServer
         protected override async void OnError(WebSocketSharp.ErrorEventArgs e)
         {
             Logger.WriteLog("OnError : " + e.Message);
-            RedisManager.Instance.CloseRedisConnect(ID);
+
+            if (ID != null)
+                RedisManager.Instance.CloseRedisConnect(ID);
             base.OnError(e);
         }
 
