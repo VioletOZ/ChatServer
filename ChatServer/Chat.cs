@@ -385,7 +385,7 @@ namespace ChatServer
             {
                 // 정상적인 종료가 아닐경우 세션이 없다...
                 Logger.WriteLog("OnClose Message : " + e.Message);
-                RedisManager.Instance.CloseRedisConnect(ID);
+                await RedisManager.Instance.CloseRedisConnect(ID);
             }
         }
 
@@ -394,7 +394,7 @@ namespace ChatServer
             Logger.WriteLog("OnError : " + e.Message);
 
             if (ID != null)
-                RedisManager.Instance.CloseRedisConnect(ID);
+                await RedisManager.Instance.CloseRedisConnect(ID);
             base.OnError(e);
         }
 
@@ -443,7 +443,11 @@ namespace ChatServer
                 // 길드UID를 채널번호로 지정 . 
                 result = await m_ChatPlayer.EnterChannel(CHAT_TYPE.CT_GUILD, guildId, OnRedisMessageHandler);
                 if (!result)
+                {
                     Logger.WriteLog("Chat InitClient EnterChannel Fail : " + ID);
+                    Close(CloseStatusCode.ServerError, "Sbuscribe");
+                }
+
             }
 
             return true;

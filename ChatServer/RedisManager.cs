@@ -269,6 +269,9 @@ namespace ChatServer
             {
                 for( int i = 0; i < _subChannelDict[channel].Count; i++)
                 {
+                    // 등록이안되었거나 이미 삭제했음 !
+                    if (_subChannelDict[channel].ElementAtOrDefault(i) == null)
+                        return true;
                     if (_subChannelDict[channel][i].UserUID == userUid)
                     {
                         _subChannelDict[channel].RemoveAt(i);
@@ -421,7 +424,7 @@ namespace ChatServer
             return leastPendingDatabase;
         }
 
-        public void CloseRedisConnect(string ID)
+        public async Task CloseRedisConnect(string ID)
         {
             if (multiPlexerMap == null)
                 return;
@@ -431,8 +434,12 @@ namespace ChatServer
                 List<int> redisConnIndexList = multiPlexerMap[ID];
                 foreach (var index in redisConnIndexList)
                 {
-                    _connectionPool[index].Dispose();
-                    _connectionPool[index] = null;
+                    if (_connectionPool[index] != null)
+                    {
+                        await _connectionPool[index].CloseAsync();
+                        _connectionPool[index] = null;
+                    }
+                    
                 }
 
                 multiPlexerMap.Remove(ID);

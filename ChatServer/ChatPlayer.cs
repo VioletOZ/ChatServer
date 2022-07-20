@@ -179,14 +179,20 @@ namespace ChatServer
                     NormalChannel = channelNum;
                     ch = GetNormalChannel();
                     if (!await EnterUserChannel(type))
+                    {
                         Logger.WriteLog("ChatPlayer Normal EnterUserChannel Fail : " + UserData.UserUID);
+                        return false;
+                    }
                     break;
 
                 case CHAT_TYPE.CT_GUILD:
                     GuildChannel = channelNum;
                     ch = GetGuildChannel();
                     if (!await EnterUserChannel(type))
+                    {
                         Logger.WriteLog("ChatPlayer Guild EnterUserChannel Fail : " + UserData.UserUID);
+                        return false;
+                    }
                     break;
                 case CHAT_TYPE.CT_SYSTEM:
                     ch = Constance.SYSTEM;
@@ -279,6 +285,10 @@ namespace ChatServer
             enterUser.ReturnCode = RETURN_CODE.RC_OK;
             enterUser.ChatType = type;
             enterUser.UserData = UserData;
+
+            // 비동기 처리동안 세션이 짤렸을수있다.
+            if (SessionState == null)
+                return false;
 
             switch (type)
             {

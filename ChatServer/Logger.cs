@@ -49,7 +49,7 @@ namespace ChatServer
             }
             catch (Exception e)
             {
-                Console.WriteLine("LogError : " + e.Message);
+                //Console.WriteLine("LogError : " + e.Message);
             }
         }
     }
