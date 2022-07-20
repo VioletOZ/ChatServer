@@ -423,6 +423,9 @@ namespace ChatServer
 
         public void CloseRedisConnect(string ID)
         {
+            if (multiPlexerMap == null)
+                return;
+
             if (multiPlexerMap.ContainsKey(ID))
             {
                 List<int> redisConnIndexList = multiPlexerMap[ID];
