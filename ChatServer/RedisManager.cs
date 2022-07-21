@@ -132,7 +132,6 @@ namespace ChatServer
         {
             try
             {
-                Logger.WriteLog("Enter - " + SessionID);
                 var result = await gameServerState.db.KeyExistsAsync("Session:" + SessionID);
                 //var result = await conn.db.KeyExistsAsync("Session:" + SessionID);
                 if (!result)
@@ -275,7 +274,7 @@ namespace ChatServer
                 {
                     // 등록이안되었거나 이미 삭제했음 !
                     if (_subChannelDict[channel].ElementAtOrDefault(i) == null)
-                        return true;
+                        continue;
                     if (_subChannelDict[channel][i].ID == ID)
                     {
                         _subChannelDict[channel].RemoveAt(i);
@@ -367,16 +366,14 @@ namespace ChatServer
                 var connection = _connectionPool[i];                
                 if (connection == null)
                 {
-                    _redisConfigurationOptions.AbortOnConnectFail = false;
-                    _redisConfigurationOptions.ConnectTimeout = Constance.CONNECT_TIME_OUT;
-                    _redisConfigurationOptions.AsyncTimeout = Constance.CONNECT_TIME_OUT;
+                    _redisConfigurationOptions.AbortOnConnectFail = true;
                     _connectionPool[i] = await ConnectionMultiplexer.ConnectAsync(_redisConfigurationOptions);
 
                     if (!multiPlexerMap.ContainsKey(ID))
                         multiPlexerMap.Add(ID, new List<int>());
                     multiPlexerMap[ID].Add(i);
                     if (i % 100  < 1)
-                        Logger.WriteLog("Redis Connect Count : " + i);
+                        Logger.WriteLog("Redis Connect Count : " + (i / 100));
                     return _connectionPool[i].GetSubscriber();
                 }
 
@@ -402,9 +399,7 @@ namespace ChatServer
 
                 if (connection == null)
                 {
-                    _redisConfigurationOptions.AbortOnConnectFail = false;
-                    _redisConfigurationOptions.ConnectTimeout = Constance.CONNECT_TIME_OUT;
-                    _redisConfigurationOptions.AsyncTimeout = Constance.CONNECT_TIME_OUT;
+                    _redisConfigurationOptions.AbortOnConnectFail = true;
 
                     _connectionPool[i] = await ConnectionMultiplexer.ConnectAsync(_redisConfigurationOptions);
 
@@ -412,7 +407,7 @@ namespace ChatServer
                         multiPlexerMap.Add(ID, new List<int>());
                     multiPlexerMap[ID].Add(i);
                     if (i % 100  < 1)
-                        Logger.WriteLog("Redis Connect Count : " + i);
+                        Logger.WriteLog("Redis Connect Count : " + (i / 100));
                     return _connectionPool[i].GetDatabase();
                 }
 
@@ -428,10 +423,10 @@ namespace ChatServer
             return leastPendingDatabase;
         }
 
-        public async Task CloseRedisConnect(string ID)
+        public Task CloseRedisConnect(string ID)
         {
             if (multiPlexerMap == null)
-                return;
+                return null;
 
             if (multiPlexerMap.ContainsKey(ID))
             {
@@ -440,27 +435,16 @@ namespace ChatServer
                 {
                     if (_connectionPool[index] != null)
                     {
-                        await _connectionPool[index].CloseAsync();
+                        _connectionPool[index].Close();
                         _connectionPool[index] = null;
                     }
                     
                 }
 
                 multiPlexerMap.Remove(ID);
-
-                foreach (var entry in _subChannelDict)
-                {
-                    for (int i = 0; i < entry.Value.Count; i++)
-                    {
-                        if (entry.Value[i].ID == ID)
-                        {
-                            _subChannelDict[entry.Key].RemoveAt(i);
-                        }
-                            
-                    }
-                }
-
             }
+
+            return null;
         }
     }
 

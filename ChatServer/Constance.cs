@@ -82,8 +82,9 @@ namespace ChatServer
         public const string LOG = "LOG";
         public const int PAGE_SIZE = 250;
         public const int LOG_COUNT = 100;
-        public const int CONNECT_TIME_OUT = 10000;              // 10초
-        public const int POOL_SIZE = 50000;
+        public const int CONNECT_TIME_OUT = 5000;              // 5초
+        public const int ASYNC_TIME_OUT = 10000;
+        public const int POOL_SIZE = 40000;
 
         public static int POSSIBLE_CHANNEL_NUMBER = 1;
     }

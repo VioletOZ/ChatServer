@@ -203,7 +203,8 @@ namespace ChatServer
             }
 
             Logger.WriteLog("EnterChannel : " + ch + "-" + UserData.UserUID);
-            if (!await RedisManager.Instance.SubscribeAction(SessionState, ch, UserData, action))
+            var result = await RedisManager.Instance.SubscribeAction(SessionState, ch, UserData, action);
+            if (!result)
                 Logger.WriteLog("ChatPlayer EnterChannel Subscribe Fail : " + ch);
 
             return true;
@@ -286,7 +287,7 @@ namespace ChatServer
             enterUser.ChatType = type;
             enterUser.UserData = UserData;
 
-            // 비동기 처리동안 세션이 짤렸을수있다.
+            // 처리동안 세션이 짤렸을수있다.
             if (SessionState == null)
                 return false;
 
