@@ -303,7 +303,7 @@ namespace ChatServer
             }
         }
 
-        protected override async void OnClose(CloseEventArgs args)
+        protected override void OnClose(CloseEventArgs args)
         {
             // 채팅서버만 끊길 경우를 대비해 재접속 관련 코드 추가 필요.
             // 레디스에서 세션확인 해야함
@@ -316,7 +316,7 @@ namespace ChatServer
                 // 
                 if (m_ChatPlayer != null)
                 {
-                    await m_ChatPlayer.LeaveAllChannel();                    
+                    Task.Run(() => m_ChatPlayer.LeaveAllChannel());
                 }
 
                 //_ = RedisManager.Instance.UnSubscribe(m_ChatPlayer.GetNormalChannel(), m_ChatPlayer.UserData);
@@ -333,13 +333,13 @@ namespace ChatServer
 
                 Logger.WriteLog("Session Close Count : " + Sessions.Count);
                 CloseAsync();
-                _ = RedisManager.Instance.CloseRedisConnect(ID);
+                Task.Run(() => RedisManager.Instance.CloseRedisConnect(ID));
             }
             catch (Exception e)
             {
                 // 정상적인 종료가 아닐경우 세션이 없다...
                 Logger.WriteLog("OnClose Message : " + e.Message);
-                _ = RedisManager.Instance.CloseRedisConnect(ID);
+                Task.Run(() => RedisManager.Instance.CloseRedisConnect(ID));
             }
         }
 
@@ -348,7 +348,7 @@ namespace ChatServer
             Logger.WriteLog("OnError : " + e.Message);
 
             if (ID != null)
-                RedisManager.Instance.CloseRedisConnect(ID);
+                Task.Run(() => RedisManager.Instance.CloseRedisConnect(ID));
             base.OnError(e);
         }
 

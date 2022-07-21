@@ -423,10 +423,10 @@ namespace ChatServer
             return leastPendingDatabase;
         }
 
-        public Task CloseRedisConnect(string ID)
+        public async Task CloseRedisConnect(string ID)
         {
             if (multiPlexerMap == null)
-                return null;
+                return ;
 
             if (multiPlexerMap.ContainsKey(ID))
             {
@@ -435,7 +435,7 @@ namespace ChatServer
                 {
                     if (_connectionPool[index] != null)
                     {
-                        _connectionPool[index].Close();
+                        await _connectionPool[index].CloseAsync();
                         _connectionPool[index] = null;
                     }
                     
@@ -444,7 +444,7 @@ namespace ChatServer
                 multiPlexerMap.Remove(ID);
             }
 
-            return null;
+            return ;
         }
     }
 

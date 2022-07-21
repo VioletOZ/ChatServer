@@ -16,6 +16,14 @@ namespace ChatServer
     {
         static void Main(string[] args)
         {
+            
+            string FilePath = Environment.CurrentDirectory + "/cfg/" + "env.cfg";
+
+            foreach (string line in File.ReadAllLines(FilePath))
+            {
+                Console.WriteLine(line);
+            }
+
             if (Constance.ENV_CHAT_SERVER_PORT == null)
             {
                 Console.WriteLine("Env Server Port is Null");
