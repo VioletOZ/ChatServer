@@ -63,9 +63,9 @@ namespace ChatServer
         public RedisManager()
         {
             //_env = Environment.GetEnvironmentVariable("RedisConnection", EnvironmentVariableTarget.Process);
-            _env = Constance.ENV_CHAT_SERVER_REDIS_ADDR + ":" + Constance.ENV_CHAT_SERVER_REDIS_PORT;
+            _env = Constance.Env.ChatServerRedisAddr + ":" + Constance.Env.ChatServerRedisPort;
             // 채팅서버 레디스
-            if (Constance.ENV_CHAT_SERVER_REDIS_ADDR == null || Constance.ENV_CHAT_SERVER_REDIS_PORT == null)
+            if (Constance.Env.ChatServerRedisAddr == null || Constance.Env.ChatServerRedisPort == null)
             {
                 Logger.WriteLog("ChatServer Redis Connection Fail..");
                 Environment.Exit(0);
@@ -88,8 +88,8 @@ namespace ChatServer
             {
                 ConfigurationOptions redisConf;                
 
-                string redisAddr = Constance.ENV_GAME_SERVER_REDIS_ADDR;
-                string redisPort = Constance.ENV_GAME_SERVER_REDIS_PORT;
+                string redisAddr = Constance.Env.GameServerRedisAddr;
+                string redisPort = Constance.Env.GameServerRedisPort;
 
                 // 게임서버 레디스
                 if (redisAddr == null || redisPort == null)

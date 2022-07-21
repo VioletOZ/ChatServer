@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 
+
 namespace ChatServer
 {
     public enum RETURN_CODE
@@ -57,21 +58,22 @@ namespace ChatServer
         CT_CLOSE = 3,
         CT_ERROR = 99
     }
+    class Env
+    {
+        public string ChatServerPort { get; set; }
+        public string ChatServerLogPath { get; set; }
+
+        public string ChatServerRedisAddr { get; set; }
+        public string ChatServerRedisPort { get; set; }
+
+        public string GameServerRedisAddr { get; set; }
+        public string GameServerRedisPort { get; set; }
+
+    };
 
     static class Constance
     {
-        // Game Server Redis
-        public static readonly string ENV_GAME_SERVER_REDIS_ADDR = Environment.GetEnvironmentVariable("ENV_GAME_SERVER_REDIS_ADDR");
-        public static readonly string ENV_GAME_SERVER_REDIS_PORT = Environment.GetEnvironmentVariable("ENV_GAME_SERVER_REDIS_PORT");
-
-        // Chat Server Redis
-        public static readonly string ENV_CHAT_SERVER_REDIS_ADDR = Environment.GetEnvironmentVariable("ENV_CHAT_SERVER_REDIS_ADDR");
-        public static readonly string ENV_CHAT_SERVER_REDIS_PORT = Environment.GetEnvironmentVariable("ENV_CHAT_SERVER_REDIS_PORT");
-
-        // Chat Server
-        public static readonly string ENV_CHAT_SERVER_PORT = Environment.GetEnvironmentVariable("ENV_CHAT_SERVER_PORT");
-        public static readonly string ENV_CHAT_SERVER_LOG_PATH = Environment.GetEnvironmentVariable("ENV_CHAT_SERVER_LOG_PATH");
-
+        public static Env Env = new Env();
         public const int CHANNEL_PLAYER_MAX = 50;               // Max Player 
         public const int CHANNEL_MAX = 9999;                    // Max Channel
         

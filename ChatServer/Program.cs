@@ -10,22 +10,30 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.IO;
 
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
 namespace ChatServer
 {
+    
+
     class Program
     {
         static void Main(string[] args)
         {
-            Console.WriteLine(Constance.ENV_CHAT_SERVER_PORT);
-            Console.WriteLine(Constance.ENV_CHAT_SERVER_LOG_PATH);
+            StreamReader r = new StreamReader("cfg/env.cfg");
+            Constance.Env = JsonSerializer.Deserialize<Env>(r.ReadToEnd());
+            
+            Console.WriteLine(Constance.Env.ChatServerPort);
+            Console.WriteLine(Constance.Env.ChatServerLogPath);
 
-            Console.WriteLine(Constance.ENV_CHAT_SERVER_REDIS_ADDR);
-            Console.WriteLine(Constance.ENV_CHAT_SERVER_REDIS_PORT);
+            Console.WriteLine(Constance.Env.ChatServerRedisAddr);
+            Console.WriteLine(Constance.Env.ChatServerRedisPort);
 
-            Console.WriteLine(Constance.ENV_GAME_SERVER_REDIS_ADDR);
-            Console.WriteLine(Constance.ENV_GAME_SERVER_REDIS_PORT);
+            Console.WriteLine(Constance.Env.GameServerRedisAddr);
+            Console.WriteLine(Constance.Env.GameServerRedisPort);
 
-            if (Constance.ENV_CHAT_SERVER_PORT == null)
+            if (Constance.Env.ChatServerPort == null)
             {
                 Console.WriteLine("Env Server Port is Null");
                 Environment.Exit(0);
@@ -57,7 +65,7 @@ namespace ChatServer
             }
 
 
-            Logger.WriteLog("ServerLog Path : " + Constance.ENV_CHAT_SERVER_LOG_PATH);
+            Logger.WriteLog("ServerLog Path : " + Constance.Env.ChatServerLogPath);
             // 웹소켓 초기화
             WebSocketServer webSocketServer = null;
             if (webSocketServer != null)
