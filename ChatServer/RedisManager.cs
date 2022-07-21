@@ -248,32 +248,63 @@ namespace ChatServer
             await _chatState.subscriber.PublishAsync(channel, EncodingJson.Serialize(notiMessage));
         }
 
-        public bool UnSubscribe(string channel, string ID)
+        public async Task<bool> UnSubscribe(string channel, string ID)
         {
-            // 채널 기준으로 먼저
-            if (_subChannelDict.ContainsKey(channel))
+            try
             {
-                int index = _subChannelDict[channel].FindIndex((ChatUserDataEx p) => p.UserData.ID == ID);
-                _subChannelDict[channel].RemoveAt(index);
+                // 채널 기준으로 먼저
+                //if (_subChannelDict.ContainsKey(channel))
+                //{
+                //    int index = _subChannelDict[channel].FindIndex((ChatUserDataEx p) => p.UserData.ID == ID);
+                //    _subChannelDict[channel].RemoveAt(index);
 
-                // 해당 채널에 아무도없으면 삭제
-                if (_subChannelDict[channel].Count <= 0)
-                    _subChannelDict.Remove(channel);
+                //    // 해당 채널에 아무도없으면 삭제
+                //    if (_subChannelDict[channel].Count <= 0)
+                //        _subChannelDict.Remove(channel);
+                //}
+
+                // 세션 기준으로 삭제
+                if (_subSessionDict.ContainsKey(ID))
+                {
+                    _subSessionDict[ID].Remove(channel);
+                }
+
+                // 구독 취소 는 하지않고 서버에서 해당 채널 DIct 에서만 제거
+                //await _chatState.subscriber.UnsubscribeAsync(channel);
             }
-
-            // 세션 기준으로 삭제
-            if (_subSessionDict.ContainsKey(ID))
+            catch
             {
-                int index = _subSessionDict[ID].FindIndex((string p) => p == channel);
-                _subSessionDict[ID].RemoveAt(index);
+                // 세션 기준으로 삭제
+                if (_subSessionDict.ContainsKey(ID))
+                {
+                    _subSessionDict[ID].Remove(channel);                    
+                }
             }
-
-            // 구독 취소 는 하지않고 서버에서 해당 채널 DIct 에서만 제거
-            //await _chatState.subscriber.UnsubscribeAsync(channel);
+            
 
             return true;
         }
 
+
+        public void LeaveUser(string ID)
+        {
+            try
+            {
+                if (_subSessionDict.ContainsKey(ID))
+                {
+                    //foreach (var ch in _subSessionDict[ID])
+                    //{
+                    //    int index = _subChannelDict[ch].FindIndex((ChatUserDataEx p) => p.UserData.ID == ID);
+                    //    _subChannelDict[ch].RemoveAt(index);
+                    //}
+                    _subSessionDict.Remove(ID);
+                }
+            }
+            catch
+            {
+            }
+            
+        }
         public async Task UnSubscribeAll()
         {
             await _chatState.subscriber.UnsubscribeAllAsync();
@@ -356,14 +387,14 @@ namespace ChatServer
             if (_subSessionDict.ContainsKey(ID))
             {
                 // 해당 세션의 채널들 삭제
-                if (_subSessionDict[ID].Count <= 0)
-                {
-                    foreach (string ch in _subSessionDict[ID])
-                    {
-                        int index = _subChannelDict[ch].FindIndex((ChatUserDataEx ex) => ex.UserData.ID == ID);
-                        _subChannelDict[ch].RemoveAt(index);
-                    }
-                }
+                //if (_subSessionDict[ID].Count <= 0)
+                //{
+                //    foreach (string ch in _subSessionDict[ID])
+                //    {
+                //        int index = _subChannelDict[ch].FindIndex((ChatUserDataEx ex) => ex.UserData.ID == ID);
+                //        _subChannelDict[ch].RemoveAt(index);
+                //    }
+                //}
                 
                 _subSessionDict.Remove(ID);
             }

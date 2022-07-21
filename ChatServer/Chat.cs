@@ -280,7 +280,7 @@ namespace ChatServer
                         res_ChatReceiveEnd resEnd = new res_ChatReceiveEnd();
                         resEnd.Command = CHAT_COMMAND.CT_CHANNEL_RECEIVE_END;
                         resEnd.ReturnCode = RETURN_CODE.RC_OK;
-                        if (!m_ChatPlayer.ReceiveEnd())
+                        if (!await m_ChatPlayer.ReceiveEnd())
                             resEnd.ReturnCode = RETURN_CODE.RC_FAIL;
 
                         SendAsync(EncodingJson.Serialize<res_ChatReceiveEnd>(resEnd), null);
@@ -328,7 +328,7 @@ namespace ChatServer
                 // 
                 if (m_ChatPlayer != null)
                 {
-                    Task.Run(() => m_ChatPlayer.LeaveAllChannel());
+                    m_ChatPlayer.LeaveAllChannel();
                 }
 
                 //_ = RedisManager.Instance.UnSubscribe(m_ChatPlayer.GetNormalChannel(), m_ChatPlayer.UserData);
