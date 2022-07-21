@@ -30,11 +30,6 @@ namespace ChatServer
                 Environment.Exit(0);
             }
 
-            Console.WriteLine(Constance.ENV_CHAT_SERVER_REDIS_ADDR);
-            Console.WriteLine(Constance.ENV_CHAT_SERVER_REDIS_PORT);
-
-            Console.WriteLine(Constance.ENV_GAME_SERVER_REDIS_ADDR);
-            Console.WriteLine(Constance.ENV_GAME_SERVER_REDIS_PORT);
 
             // 게임서버 레디스 임시로 막아둠 ... Chat/AuthVerify 도 막아둠 
             // 게임서버 레디스 접속 
