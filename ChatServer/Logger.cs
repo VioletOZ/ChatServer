@@ -47,9 +47,9 @@ namespace ChatServer
                     }
                 }
             }
-            catch (Exception e)
+            catch 
             {
-                Console.WriteLine("LogError : " + e.Message);
+                
             }
         }
     }

@@ -37,7 +37,26 @@ namespace ChatServer
             }
         }
 
-        
+        private Action<RedisChannel, RedisValue> m_onRedisMessageHandler = null;
+        public Action<RedisChannel, RedisValue> OnRedisMessageHandler
+        {
+            get
+            {
+                if (this.m_onRedisMessageHandler == null)
+                {
+                    this.m_onRedisMessageHandler = new Action<RedisChannel, RedisValue>
+                                                ((channel, value) =>
+                                                {
+                                                    // 채널별로 메시지 전송
+                                                    SendChannelUser(channel, value.ToString());
+                                                    //SendAsync(value.ToString(), null);
+                                                });
+                }
+                return this.m_onRedisMessageHandler;
+            }
+        }
+
+
         JsonSerializerOptions options = new JsonSerializerOptions
         {
             Converters =
@@ -46,39 +65,43 @@ namespace ChatServer
                 }
         };
 
-        private ConnectionMultiplexer[] _connectionPool;
-        private Dictionary<string, List<int>> multiPlexerMap = new Dictionary<string, List<int>>();
         private ConfigurationOptions _redisConfigurationOptions;
 
         private string _env { get; }
 
-        //private ConnectionMultiplexer _multiplexer = null;
-        private Dictionary<string, List<ChatUserData>> _subChannelDict = new Dictionary<string, List<ChatUserData>>(); // 구독중인 채널, Client Session
-        private MessageQueue _messageQueue = new MessageQueue();
+        // 구독중인 채널, Client Session
+        private Dictionary<string, List<ChatUserDataEx>> _subChannelDict = new Dictionary<string, List<ChatUserDataEx>>();
+
+        // SessionID, 구독중인 채널
+        private Dictionary<string, List<string>> _subSessionDict = new Dictionary<string, List<string>>();
+
+        // 
+        private ConnectionMultiplexer _chatMultiPlexer = null;
+        private SessionState _chatState = new SessionState();
 
         public ConnectionMultiplexer gameServerRedis = null;
         public SessionState gameServerState = new SessionState();
 
-
+        
         public RedisManager()
         {
-            //_env = Environment.GetEnvironmentVariable("RedisConnection", EnvironmentVariableTarget.Process);
-            _env = Constance.Env.ChatServerRedisAddr + ":" + Constance.Env.ChatServerRedisPort;
+            _env = Constance.Env.ChatServerRedisDBServerIP;
             // 채팅서버 레디스
-            if (Constance.Env.ChatServerRedisAddr == null || Constance.Env.ChatServerRedisPort == null)
+            if (Constance.Env.ChatServerRedisDBServerIP == null)
             {
                 Logger.WriteLog("ChatServer Redis Connection Fail..");
                 Environment.Exit(0);
             }
 
-            //_multiplexer = ConnectionMultiplexer.Connect(_env);
-
-            //_subscriber = _multiplexer.GetSubscriber();
-            //_db = _multiplexer.GetDatabase();
-
-
-            _connectionPool = new ConnectionMultiplexer[Constance.POOL_SIZE];
             _redisConfigurationOptions = ConfigurationOptions.Parse(_env);
+
+            _redisConfigurationOptions.User = Constance.Env.ChatServerRedisDBUserID;
+            _redisConfigurationOptions.Password = Constance.Env.ChatServerRedisDBPassword;
+
+            _chatMultiPlexer = ConnectionMultiplexer.Connect(_redisConfigurationOptions);
+            _chatState.ServerSessionID = "Server";
+            _chatState.subscriber = _chatMultiPlexer.GetSubscriber();
+            _chatState.db = _chatMultiPlexer.GetDatabase();
 
         }
 
@@ -88,18 +111,17 @@ namespace ChatServer
             {
                 ConfigurationOptions redisConf;                
 
-                string redisAddr = Constance.Env.GameServerRedisAddr;
-                string redisPort = Constance.Env.GameServerRedisPort;
+                string gameRedisIP = Constance.Env.GameServerRedisDBServerIP;
 
                 // 게임서버 레디스
-                if (redisAddr == null || redisPort == null)
+                if (gameRedisIP == null)
                 {
                     Logger.WriteLog("GameServer Redis Unknown Addr or Port..");
                     Environment.Exit(0);
                 }
 
 
-                redisConf = ConfigurationOptions.Parse(redisAddr + ":" + redisPort);
+                redisConf = ConfigurationOptions.Parse(gameRedisIP);
                 if (redisConf == null)
                 {
                     Logger.WriteLog("GameServer Redis Parse Error..");
@@ -146,76 +168,37 @@ namespace ChatServer
             return true;
         }
 
-        public async Task<bool> SubscribeAction(SessionState conn, string channel, ChatUserData user, Action<RedisChannel, RedisValue> ac)
+        public async Task<bool> SubscribeAction(string channel, ChatUserData user, Action<RedisChannel, RedisValue> ac)
         {
-            if (!_subChannelDict.ContainsKey(channel))
-                _subChannelDict.Add(channel, new List<ChatUserData>());
-
-            if (IsSubscribe(channel, user.ID))
-                return true;
-
-            _subChannelDict[channel].Add(user);
-
-            if (conn == null)
+            if (_chatState == null)
                 return false;
 
-            await conn.subscriber.SubscribeAsync(channel, ac);
-            
-            return true;
-        }
-
-        public bool IsSubscribe(string channel, string ID)
-        {
-            foreach (var user in _subChannelDict[channel])
-            {
-                // 유저 정보가없다!?
-                if (user == null)
-                    continue;
-
-                if (user.ID == ID)
-                    return true;
-            }
-            return false;
-        }
-        // Redis Subscribe - 구독하고 있는 채널에 Pub가 오면 구독중인 Client에 메시지 전달
-        public bool Subscribe(SessionState conn, string channel, ChatUserData user = null)
-        {
-            if (string.IsNullOrEmpty(channel)) 
-                return false;
-
+            // 채널 기준으로 만든 Dict
             if (!_subChannelDict.ContainsKey(channel))
             {
-                _subChannelDict.Add(channel, new List<ChatUserData>());
+                _subChannelDict.Add(channel, new List<ChatUserDataEx>());
+                await _chatState.subscriber.SubscribeAsync(channel, OnRedisMessageHandler);
             }
 
-            _subChannelDict[channel].Add(user); // 구독중인 채널 추가
+            dynamic userEx = new ChatUserDataEx();
+            userEx.UserData = user;
+            userEx.Handler = ac;
 
-            Logger.WriteLog("Sub Channel : " + channel);
+            _subChannelDict[channel].Add(userEx);
 
-            conn.subscriber.SubscribeAsync(channel, (RedisChannel ch, RedisValue val) =>
-            {
-                try
-                {
-                    string eventMessage = EncodingJson.Serialize<string>(val);
-                    if (string.IsNullOrEmpty(eventMessage))
-                        eventMessage = "";
+            // 세션 기준으로 만든 DIct
+            if (!_subSessionDict.ContainsKey(user.ID))
+                _subSessionDict.Add(user.ID, new List<string>());
 
-                    // 구독 받은 메시지 MessageQueue 에 저장
-                    Logger.WriteLog("Sub Message : " + eventMessage);
+            _subSessionDict[user.ID].Add(channel);
 
-                }
-                catch (Exception e)
-                {
-                    Logger.WriteLog("Redis Subscribe Exception : " + e.Message);
-                }
-            });
-
+            //await _chatState.subscriber.SubscribeAsync(channel, ac);
 
             return true;
         }
 
         // Redis Pub
-        public async Task Publish(SessionState conn, string channel, req_ChatMessage message)
+        public async Task Publish(string channel, req_ChatMessage message)
         {
             Logger.WriteLog("Publish Message Channel : " + channel);
 
@@ -230,7 +213,7 @@ namespace ChatServer
             resMessage.ChannelID = message.ChannelID;
             resMessage.LogData = message.LogData;
 
-            var publish = await conn.subscriber.PublishAsync(channel, EncodingJson.Serialize(resMessage));
+            var publish = await _chatState.subscriber.PublishAsync(channel, EncodingJson.Serialize(resMessage));
 
             // 길드 채팅의 경우 내용저장
             // 길드채널
@@ -247,70 +230,75 @@ namespace ChatServer
                 };
 
                 // 길드 채팅 저장
-                _ = conn.db.HashSetAsync(Constance.LOG + channel, hash);
-                _ = conn.db.KeyExpireAsync(Constance.LOG, DateTime.Now.AddDays(7));
+                _ = _chatState.db.HashSetAsync(Constance.LOG + channel, hash);
+                _ = _chatState.db.KeyExpireAsync(Constance.LOG, DateTime.Now.AddDays(7));
             }
             
         }
 
         // 서버에서 특정채널에 메시지만 보내도록 쓸려고 만든것
-        public async Task ForcePublish(SessionState conn, string channel, string message)
+        public async Task ForcePublish(string channel, string message)
         {
-            await conn.subscriber.PublishAsync(channel, message);
+            await _chatState.subscriber.PublishAsync(channel, message);
         }
 
-        public async Task GachaPublish(SessionState conn, string channel, res_ChatGachaNotice notiMessage)
+        public async Task GachaPublish(string channel, res_ChatGachaNotice notiMessage)
         {
-            await conn.subscriber.PublishAsync(channel, EncodingJson.Serialize(notiMessage));
+            //SendChannelUser(channel, EncodingJson.Serialize(notiMessage));
+            await _chatState.subscriber.PublishAsync(channel, EncodingJson.Serialize(notiMessage));
         }
 
-        public async Task<bool> UnSubscribe(SessionState conn, string channel, string ID)
+        public bool UnSubscribe(string channel, string ID)
         {
-            await conn.subscriber.UnsubscribeAsync(channel);
-
+            // 채널 기준으로 먼저
             if (_subChannelDict.ContainsKey(channel))
             {
-                for( int i = 0; i < _subChannelDict[channel].Count; i++)
-                {
-                    // 등록이안되었거나 이미 삭제했음 !
-                    if (_subChannelDict[channel].ElementAtOrDefault(i) == null)
-                        continue;
-                    if (_subChannelDict[channel][i].ID == ID)
-                    {
-                        _subChannelDict[channel].RemoveAt(i);
+                int index = _subChannelDict[channel].FindIndex((ChatUserDataEx p) => p.UserData.ID == ID);
+                _subChannelDict[channel].RemoveAt(index);
 
-                        // 해당채널에 아무도없으면 채널 삭제
-                        if (_subChannelDict[channel].Count == 0)
-                            _subChannelDict.Remove(channel);
-                        return true;
-                    }
-                }
-                return true;
+                // 해당 채널에 아무도없으면 삭제
+                if (_subChannelDict[channel].Count <= 0)
+                    _subChannelDict.Remove(channel);
             }
 
-            return false;
+            // 세션 기준으로 삭제
+            if (_subSessionDict.ContainsKey(ID))
+            {
+                int index = _subSessionDict[ID].FindIndex((string p) => p == channel);
+                _subSessionDict[ID].RemoveAt(index);
+            }
+
+            // 구독 취소 는 하지않고 서버에서 해당 채널 DIct 에서만 제거
+            //await _chatState.subscriber.UnsubscribeAsync(channel);
+
+            return true;
         }
 
-        public async Task UnSubscribeAll(SessionState conn)
+        public async Task UnSubscribeAll()
         {
-            await conn.subscriber.UnsubscribeAllAsync();
+            await _chatState.subscriber.UnsubscribeAllAsync();
         }
 
-        public List<ChatUserData> GetUsersByChannel(SessionState conn, string channel)
+        public List<ChatUserData> GetUsersByChannel(string channel)
         {
             try
             {
-                return _subChannelDict[channel];
+                List<ChatUserData> userList = new List<ChatUserData>();
+                foreach (ChatUserDataEx ex in _subChannelDict[channel])
+                {
+                    userList.Add(ex.UserData);
+                }
+                return userList;
             }
             catch (Exception e)
             {
-                Logger.WriteLog("RedisManager GetUserByChannel subChannelDict Error :" + conn.ServerSessionID + ":" + e.Message);
+                Logger.WriteLog("RedisManager GetUserByChannel subChannelDict Error :" + _chatState.ServerSessionID + ":" + e.Message);
                 return null;
             }
 
         }
 
-        public int GetPossibleChannel(SessionState conn)
+        public int GetPossibleChannel()
         {
             int count = 1;
             string channel = Constance.NORMAL + count.ToString();
@@ -324,11 +312,18 @@ namespace ChatServer
             return count;
         }
 
-        public List<ChatGuildLogData> GetGuildLogData(SessionState conn, string channel, DateTime loginTime)
+        public void SendChannelUser(string ch, string value)
         {
-            //string pattern = loginTime.AddDays(-1).ToString(format: "yyyyMM") + "*";
+            foreach (ChatUserDataEx ex in _subChannelDict[ch])
+            {
+                ex.Handler(ch, value);                
+            }
+        }
+
+        public List<ChatGuildLogData> GetGuildLogData(string channel, DateTime loginTime)
+        {
             string pattern = loginTime.ToString(format:"yyyyMMdd") + "*";
-            var result = conn.db.HashScan(Constance.LOG + channel, pattern, Constance.PAGE_SIZE, Constance.LOG_COUNT, 0);
+            var result = _chatState.db.HashScan(Constance.LOG + channel, pattern, Constance.PAGE_SIZE, Constance.LOG_COUNT, 0);
 
             List<ChatGuildLogData> logs = new List<ChatGuildLogData>();
             ChatGuildLogData log = new ChatGuildLogData();
@@ -344,104 +339,33 @@ namespace ChatServer
 
         public async Task GetUserHash(SessionState conn, string ID)
         {
-            var val = await conn.db.HashGetAsync("User:" + ID, "User");
+            var val = await _chatState.db.HashGetAsync("User:" + ID, "User");
             Logger.WriteLog("GetHash" + val);
 
         }
 
         public async Task GetString(SessionState conn, string key)
         {
-            var val = await conn.db.StringGetAsync(key);
+            var val = await _chatState.db.StringGetAsync(key);
             Logger.WriteLog("GetString : " + val);
 
         }
 
-        public async Task<ISubscriber> GetSubscriberAsync(string ID)
+        public void CloseRedisConnect(string ID)
         {
-            var leastPendingTasks = long.MaxValue;
-            ISubscriber leastPendingDatabase = null;
-
-            for (int i = 0; i < _connectionPool.Length; i++)
+            if (_subSessionDict.ContainsKey(ID))
             {
-                var connection = _connectionPool[i];                
-                if (connection == null)
+                // 해당 세션의 채널들 삭제
+                if (_subSessionDict[ID].Count <= 0)
                 {
-                    _redisConfigurationOptions.AbortOnConnectFail = true;
-                    _connectionPool[i] = await ConnectionMultiplexer.ConnectAsync(_redisConfigurationOptions);
-
-                    if (!multiPlexerMap.ContainsKey(ID))
-                        multiPlexerMap.Add(ID, new List<int>());
-                    multiPlexerMap[ID].Add(i);
-                    if (i % 100  < 1)
-                        Logger.WriteLog("Redis Connect Count : " + (i / 100));
-                    return _connectionPool[i].GetSubscriber();
-                }
-
-                var pending = connection.GetCounters().TotalOutstanding;
-                if (pending < leastPendingTasks)
-                {
-                    leastPendingTasks = pending;
-                    leastPendingDatabase = connection.GetSubscriber();
-                }
-            }
-
-            return leastPendingDatabase;
-        }
-
-        public async Task<IDatabase> GetDatabaseAsync(string ID)
-        {
-            var leastPendingTasks = long.MaxValue;
-            IDatabase leastPendingDatabase = null;
-
-            for (int i = 0; i < _connectionPool.Length; i++)
-            {
-                var connection = _connectionPool[i];
-
-                if (connection == null)
-                {
-                    _redisConfigurationOptions.AbortOnConnectFail = true;
-
-                    _connectionPool[i] = await ConnectionMultiplexer.ConnectAsync(_redisConfigurationOptions);
-
-                    if (!multiPlexerMap.ContainsKey(ID))
-                        multiPlexerMap.Add(ID, new List<int>());
-                    multiPlexerMap[ID].Add(i);
-                    if (i % 100  < 1)
-                        Logger.WriteLog("Redis Connect Count : " + (i / 100));
-                    return _connectionPool[i].GetDatabase();
-                }
-
-                var pending = connection.GetCounters().TotalOutstanding;
-
-                if (pending < leastPendingTasks)
-                {
-                    leastPendingTasks = pending;
-                    leastPendingDatabase = connection.GetDatabase();
-                }
-            }
-
-            return leastPendingDatabase;
-        }
-
-        public async Task CloseRedisConnect(string ID)
-        {
-            if (multiPlexerMap == null)
-                return ;
-
-            if (multiPlexerMap.ContainsKey(ID))
-            {
-                List<int> redisConnIndexList = multiPlexerMap[ID];
-                foreach (var index in redisConnIndexList)
-                {
-                    if (_connectionPool[index] != null)
+                    foreach (string ch in _subSessionDict[ID])
                     {
-                        await _connectionPool[index].CloseAsync();
-                        _connectionPool[index] = null;
+                        int index = _subChannelDict[ch].FindIndex((ChatUserDataEx ex) => ex.UserData.ID == ID);
+                        _subChannelDict[ch].RemoveAt(index);
                     }
-                    
                 }
-
-                multiPlexerMap.Remove(ID);
+                
+                _subSessionDict.Remove(ID);
             }
 
             return ;

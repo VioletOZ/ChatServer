@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using StackExchange.Redis;
 
 namespace ChatServer
 {
@@ -12,6 +13,12 @@ namespace ChatServer
         public long UserUID { get; set; }
         public string UserName { get; set; }
         public int CharacterID { get; set; }
+    }
+
+    public class ChatUserDataEx
+    {
+        public ChatUserData UserData { get; set; }
+        public Action<RedisChannel, RedisValue> Handler { get; set; }
     }
 
     public class ChatLogData

@@ -137,7 +137,7 @@ namespace ChatServer
                     //_queue.Print
                 }
 
-                //Thread.Sleep(100);
+                Thread.Sleep(100);
             }
         }
     }
@@ -165,7 +165,7 @@ namespace ChatServer
                     //_queue.Print
                 }
 
-                //Thread.Sleep(100);
+                Thread.Sleep(100);
             }
         }
     }

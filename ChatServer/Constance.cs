@@ -63,11 +63,16 @@ namespace ChatServer
         public string ChatServerPort { get; set; }
         public string ChatServerLogPath { get; set; }
 
-        public string ChatServerRedisAddr { get; set; }
-        public string ChatServerRedisPort { get; set; }
+        public string ChatServerRedisDBServerIP { get; set; }
+        public string ChatServerRedisDBUserID { get; set; }
+        public string ChatServerRedisDBPassword { get; set; }
+        public string ChatServerRedisDBName { get; set; }
 
-        public string GameServerRedisAddr { get; set; }
-        public string GameServerRedisPort { get; set; }
+
+        public string GameServerRedisDBServerIP { get; set; }
+        public string GameServerRedisDBUserID { get; set; }
+        public string GameServerRedisDBPassword { get; set; }
+        public string GameServerRedisDBName { get; set; }
 
     };
 

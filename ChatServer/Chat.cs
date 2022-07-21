@@ -37,6 +37,18 @@ namespace ChatServer
             }
         }
 
+        public Action<string> OnSendMessage
+        {
+            get
+            {
+                return new Action<string>((value) =>
+               {
+                   SendAsync(value, null);
+               });
+            }
+        }
+        
+
         JsonSerializerOptions options = new JsonSerializerOptions
         {
             Converters =
@@ -159,7 +171,7 @@ namespace ChatServer
                             channel = m_ChatPlayer.GetGuildChannel();
 
                         res_ChatInfo info = new res_ChatInfo();
-                        List<ChatUserData> userData = RedisManager.Instance.GetUsersByChannel(m_ChatPlayer.SessionState, channel);
+                        List<ChatUserData> userData = RedisManager.Instance.GetUsersByChannel(channel);
 
                         info.ReturnCode = RETURN_CODE.RC_OK;
                         if (userData == null)
@@ -215,7 +227,7 @@ namespace ChatServer
 
                         changeChannel.Command = command.Command;
                         changeChannel.ChannelID = m_ChatPlayer.NormalChannel;                        
-                        changeChannel.ChannelUserDataList = RedisManager.Instance.GetUsersByChannel(m_ChatPlayer.SessionState, m_ChatPlayer.GetNormalChannel());
+                        changeChannel.ChannelUserDataList = RedisManager.Instance.GetUsersByChannel(m_ChatPlayer.GetNormalChannel());
 
                         SendAsync(JsonSerializer.Serialize<res_ChatChangeChannel>(changeChannel, options), null);
 
@@ -237,7 +249,7 @@ namespace ChatServer
                         enterChannel.Command = CHAT_COMMAND.CT_CHANNEL_ENTER;
                         enterChannel.ChatType = enterMessage.ChatType;
                         enterChannel.ChannelID = enterMessage.ChannelID;
-                        enterChannel.ChannelUserDataList = RedisManager.Instance.GetUsersByChannel(m_ChatPlayer.SessionState, channel);
+                        enterChannel.ChannelUserDataList = RedisManager.Instance.GetUsersByChannel(channel);
 
                         SendAsync(JsonSerializer.Serialize<res_ChatEnterChannel>(enterChannel, options), null);
                         break;
@@ -268,7 +280,7 @@ namespace ChatServer
                         res_ChatReceiveEnd resEnd = new res_ChatReceiveEnd();
                         resEnd.Command = CHAT_COMMAND.CT_CHANNEL_RECEIVE_END;
                         resEnd.ReturnCode = RETURN_CODE.RC_OK;
-                        if (!await m_ChatPlayer.ReceiveEnd())
+                        if (!m_ChatPlayer.ReceiveEnd())
                             resEnd.ReturnCode = RETURN_CODE.RC_FAIL;
 
                         SendAsync(EncodingJson.Serialize<res_ChatReceiveEnd>(resEnd), null);
@@ -287,8 +299,8 @@ namespace ChatServer
 
                         //Sessions.BroadcastAsync(JsonSerializer.Serialize<res_ChatGachaNotice>(gachaNotice, options), null);
 
-                        await RedisManager.Instance.GachaPublish(m_ChatPlayer.SessionState, m_ChatPlayer.GetNormalChannel(), gachaNotice);
-                        await RedisManager.Instance.GachaPublish(m_ChatPlayer.SessionState, m_ChatPlayer.GetGuildChannel(), gachaNotice);
+                        await RedisManager.Instance.GachaPublish(m_ChatPlayer.GetNormalChannel(), gachaNotice);
+                        await RedisManager.Instance.GachaPublish(m_ChatPlayer.GetGuildChannel(), gachaNotice);
 
                         break;
 
@@ -375,12 +387,8 @@ namespace ChatServer
                 }
 
                 var result = Task.Run(() => InitClient(sessionID, UID, name, charID, guildID));
-                //if (!result.)
-                //{
-                //    Logger.WriteLog("Chat OnOpen InitClient Error");
-                //    CloseAsync();
-                //    return;
-                //}
+
+                Logger.WriteLog("Connected Client : " + Sessions.Count);
 
             }
             catch (Exception e)

@@ -27,11 +27,9 @@ namespace ChatServer
             Console.WriteLine(Constance.Env.ChatServerPort);
             Console.WriteLine(Constance.Env.ChatServerLogPath);
 
-            Console.WriteLine(Constance.Env.ChatServerRedisAddr);
-            Console.WriteLine(Constance.Env.ChatServerRedisPort);
+            Console.WriteLine(Constance.Env.ChatServerRedisDBServerIP);
 
-            Console.WriteLine(Constance.Env.GameServerRedisAddr);
-            Console.WriteLine(Constance.Env.GameServerRedisPort);
+            Console.WriteLine(Constance.Env.GameServerRedisDBServerIP);
 
             if (Constance.Env.ChatServerPort == null)
             {
