@@ -248,7 +248,7 @@ namespace ChatServer
             await _chatState.subscriber.PublishAsync(channel, EncodingJson.Serialize(notiMessage));
         }
 
-        public async Task<bool> UnSubscribe(string channel, string ID)
+        public bool UnSubscribe(string channel, string ID)
         {
             try
             {

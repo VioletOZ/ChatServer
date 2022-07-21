@@ -233,7 +233,7 @@ namespace ChatServer
                     return false;
             }
 
-            if (!RedisManager.Instance.UnSubscribe(channel, UserData.ID).Result)
+            if (!RedisManager.Instance.UnSubscribe(channel, UserData.ID))
                 return false;
 
             //await UserStateChannel(CHAT_ENTER_STATE.CT_ENTER, type, channel);
@@ -319,9 +319,9 @@ namespace ChatServer
 
         }
 
-        public async Task<bool> ReceiveEnd()
+        public bool ReceiveEnd()
         {
-            if (!RedisManager.Instance.UnSubscribe(GetNormalChannel(), UserData.ID).Result)
+            if (!RedisManager.Instance.UnSubscribe(GetNormalChannel(), UserData.ID))
                 return false;
 
             return true;
