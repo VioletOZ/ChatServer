@@ -18,7 +18,7 @@ WORKDIR "/src/"
 RUN dotnet build "ChatServer.csproj" -c Release -o /server
 
 # ����Ʈ ����
-VOLUME ["../data/ChatServer", "/server/log"]
+VOLUME ["../data/ChatServer", "/server/logs"]
 
 FROM build AS publish
 #RUN dotnet publish "ChatServer.csproj" -c Release -o /server/publish

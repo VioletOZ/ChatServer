@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
+using System.Collections.Concurrent;
 
 namespace ChatServer
 {
@@ -16,8 +17,8 @@ namespace ChatServer
 
         public static void WriteLog(string str)
         {
-            string temp;
-            
+            BlockingCollection<string> temp = new BlockingCollection<string>();
+
             try
             {
                 string FilePath = DirPath + "/" + DateTime.Today.ToString("yyyy-MM-dd") + ".log";
@@ -29,9 +30,8 @@ namespace ChatServer
                 {
                     using (StreamWriter sw = new StreamWriter(FilePath))
                     {
-                        temp = string.Format("[{0}]{1}", DateTime.Now, str);
-                        Console.WriteLine(temp);
-                        sw.WriteLine(temp);                        
+                        temp.Add(string.Format("[{0}]{1}", DateTime.Now, str));
+                        sw.WriteLine(temp.Take());
                         sw.Close();
 
                     }
@@ -40,9 +40,8 @@ namespace ChatServer
                 {
                     using (StreamWriter sw = File.AppendText(FilePath))
                     {
-                        temp = string.Format("[{0}]{1}", DateTime.Now, str);
-                        Console.WriteLine(temp);
-                        sw.WriteLine(temp);
+                        temp.Add(string.Format("[{0}]{1}", DateTime.Now, str));
+                        sw.WriteLine(temp.Take());
                         sw.Close();
                     }
                 }

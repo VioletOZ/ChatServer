@@ -88,6 +88,7 @@ namespace ChatServer
             }
 
             Logger.WriteLog("ServerStart - " + ipAddr + ":" + webSocketServer.Port);
+            Console.WriteLine("ServerStart - " + ipAddr + ":" + webSocketServer.Port);
             while (true)
             {
 
