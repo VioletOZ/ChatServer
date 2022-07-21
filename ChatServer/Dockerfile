@@ -30,7 +30,7 @@ WORKDIR /server
 COPY ["cfg/dnsmasq.conf", "/etc/dnsmasq.conf"]
 COPY ["cfg/sysctl.conf", "/etc/sysctl.conf"]
 COPY ["cfg/limits.conf", "/etc/security/limits.conf"]
-COPY ["cfg/env.cfg", "cfg/env.cfg"]
+COPY ["cfg/ChatServer.cfg", "cfg/ChatServer.cfg"]
 
 COPY --from=publish /server .
 ENTRYPOINT ["dotnet", "ChatServer.dll"]
