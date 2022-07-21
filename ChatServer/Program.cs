@@ -16,20 +16,20 @@ namespace ChatServer
     {
         static void Main(string[] args)
         {
-            
-            string FilePath = Environment.CurrentDirectory + "/cfg/" + "env.cfg";
+            Console.WriteLine(Constance.ENV_CHAT_SERVER_PORT);
+            Console.WriteLine(Constance.ENV_CHAT_SERVER_LOG_PATH);
 
-            foreach (string line in File.ReadAllLines(FilePath))
-            {
-                Console.WriteLine(line);
-            }
+            Console.WriteLine(Constance.ENV_CHAT_SERVER_REDIS_ADDR);
+            Console.WriteLine(Constance.ENV_CHAT_SERVER_REDIS_PORT);
+
+            Console.WriteLine(Constance.ENV_GAME_SERVER_REDIS_ADDR);
+            Console.WriteLine(Constance.ENV_GAME_SERVER_REDIS_PORT);
 
             if (Constance.ENV_CHAT_SERVER_PORT == null)
             {
                 Console.WriteLine("Env Server Port is Null");
                 Environment.Exit(0);
             }
-
 
             // 게임서버 레디스 임시로 막아둠 ... Chat/AuthVerify 도 막아둠 
             // 게임서버 레디스 접속 
