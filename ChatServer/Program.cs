@@ -21,7 +21,7 @@ namespace ChatServer
     {
         static void Main(string[] args)
         {
-            StreamReader r = new StreamReader("cfg/env.cfg");
+            StreamReader r = new StreamReader("cfg/ChatServer.cfg");
             Constance.Env = JsonSerializer.Deserialize<Env>(r.ReadToEnd());
             
             Console.WriteLine(Constance.Env.ChatServerPort);
