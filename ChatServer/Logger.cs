@@ -25,6 +25,7 @@ namespace ChatServer
                 
                 FileInfo fi = new FileInfo(FilePath);
 
+                Console.WriteLine(string.Format("[{0}]{1}", DateTime.Now, str));
                 if (!di.Exists) Directory.CreateDirectory(DirPath);
                 if (!fi.Exists)
                 {

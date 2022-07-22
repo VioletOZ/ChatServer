@@ -51,8 +51,8 @@ namespace ChatServer
             //Logger.WriteLog("GameServer Redis Connect!!");
 
             int minWorker = Environment.ProcessorCount * 2;
-            int minIOC = 10;
-            if (ThreadPool.SetMinThreads(minWorker, minIOC))
+            int minIOC;
+            if (ThreadPool.SetMinThreads(minWorker, minWorker))
             {
                 ThreadPool.GetMinThreads(out minWorker, out minIOC);
                 Logger.WriteLog("MinWorker : " + minWorker + "-" + minIOC);

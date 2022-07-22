@@ -70,7 +70,7 @@ namespace ChatServer
         private string _env { get; }
 
         // 구독중인 채널, Client Session
-        private ConcurrentDictionary<string, ConcurrentBag<ChatUserDataEx>> _subChannelDict = new ConcurrentDictionary<string, ConcurrentBag<ChatUserDataEx>>();
+        private ConcurrentDictionary<string, ConcurrentDictionary<string, ChatUserDataEx>> _subChannelDict = new ConcurrentDictionary<string, ConcurrentDictionary<string, ChatUserDataEx>>();
 
         // SessionID, 구독중인 채널
         private ConcurrentDictionary<string, ConcurrentBag<string>> _subSessionDict = new ConcurrentDictionary<string, ConcurrentBag<string>>();
@@ -176,7 +176,7 @@ namespace ChatServer
             // 채널 기준으로 만든 Dict
             if (!_subChannelDict.ContainsKey(channel))
             {
-                _subChannelDict.TryAdd(channel, new ConcurrentBag<ChatUserDataEx>());
+                _subChannelDict.TryAdd(channel, new ConcurrentDictionary<string, ChatUserDataEx>());
                 await _chatState.subscriber.SubscribeAsync(channel, OnRedisMessageHandler);
             }
 
@@ -184,7 +184,7 @@ namespace ChatServer
             userEx.UserData = user;
             userEx.Handler = ac;
 
-            _subChannelDict[channel].Add(userEx);
+            _subChannelDict[channel].TryAdd(user.ID, userEx);
 
             // 세션 기준으로 만든 DIct
             if (!_subSessionDict.ContainsKey(user.ID))
@@ -298,8 +298,12 @@ namespace ChatServer
                         //int index = _subChannelDict[ch].FindIndex((ChatUserDataEx p) => p.UserData.ID == ID);
                         //_subChannelDict[ch].RemoveAt(index);
                     //}                    
-                    
                     _subSessionDict.TryRemove(ID, out temp);
+                    foreach (string ch in temp)
+                    {
+                        ChatUserDataEx user = new ChatUserDataEx();
+                        _subChannelDict[ch].TryRemove(ID, out user);
+                    }
                 }
             }
             catch
@@ -317,9 +321,9 @@ namespace ChatServer
             try
             {
                 List<ChatUserData> userList = new List<ChatUserData>();
-                foreach (ChatUserDataEx ex in _subChannelDict[channel])
+                foreach (var ex in _subChannelDict[channel])
                 {
-                    userList.Add(ex.UserData);
+                    userList.Add(ex.Value.UserData);
                 }
                 return userList;
             }
@@ -347,9 +351,17 @@ namespace ChatServer
 
         public void SendChannelUser(string ch, string value)
         {
-            foreach (ChatUserDataEx ex in _subChannelDict[ch])
+            
+            foreach (var ex in _subChannelDict[ch])
             {
-                ex.Handler(ch, value);                
+                if (ex.Value.Handler == null)
+                {
+                    RemoveUserDict(ex.Value.UserData.ID);
+                }
+                else
+                {
+                    ex.Value.Handler(ch, value);
+                }
             }
         }
 
@@ -370,14 +382,14 @@ namespace ChatServer
             return logs;
         }
 
-        public async Task GetUserHash(SessionState conn, string ID)
+        public async Task GetUserHash(string ID)
         {
             var val = await _chatState.db.HashGetAsync("User:" + ID, "User");
             Logger.WriteLog("GetHash" + val);
 
         }
 
-        public async Task GetString(SessionState conn, string key)
+        public async Task GetString(string key)
         {
             var val = await _chatState.db.StringGetAsync(key);
             Logger.WriteLog("GetString : " + val);

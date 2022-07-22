@@ -362,7 +362,7 @@ namespace ChatServer
 
             if (ID != null)
                 Task.Run(() => RedisManager.Instance.RemoveUserDict(ID));
-            base.OnError(e);
+            //base.OnError(e);
         }
 
         // Socket 연결시 호출
@@ -387,12 +387,8 @@ namespace ChatServer
                     return;
                 }
 
-                Stopwatch stopwatch = new Stopwatch();
-                stopwatch.Start();
                 Logger.WriteLog("Connected Client : " + Sessions.Count);
                 var result = InitClient(sessionID, UID, name, charID, guildID);
-                stopwatch.Stop();
-                Logger.WriteLog("Init Client : " + Sessions.Count + " Time : " + stopwatch.ElapsedMilliseconds);
 
             }
             catch (Exception e)
