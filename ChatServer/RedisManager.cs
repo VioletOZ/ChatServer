@@ -384,7 +384,7 @@ namespace ChatServer
 
         }
 
-        public void CloseRedisConnect(string ID)
+        public void RemoveUserDict(string ID)
         {
             if (_subSessionDict.ContainsKey(ID))
             {

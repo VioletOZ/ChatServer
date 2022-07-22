@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using StackExchange.Redis;
 using System.Text;
 using System.IO;
+using System.Diagnostics;
 
 namespace ChatServer
 {
@@ -325,6 +326,7 @@ namespace ChatServer
             try
             {
                 Logger.WriteLog("OnClose : " + ID);
+                CloseAsync();
                 // 
                 if (m_ChatPlayer != null)
                 {
@@ -344,14 +346,13 @@ namespace ChatServer
                 //}
 
                 Logger.WriteLog("Session Close Count : " + Sessions.Count);
-                CloseAsync();
-                Task.Run(() => RedisManager.Instance.CloseRedisConnect(ID));
+                Task.Run(() => RedisManager.Instance.RemoveUserDict(ID));
             }
             catch (Exception e)
             {
                 // 정상적인 종료가 아닐경우 세션이 없다...
-                Logger.WriteLog("OnClose Message : " + e.Message);
-                Task.Run(() => RedisManager.Instance.CloseRedisConnect(ID));
+                Logger.WriteLog("OnClose Message : " + e.Message);                
+                Task.Run(() => RedisManager.Instance.RemoveUserDict(ID));
             }
         }
 
@@ -360,7 +361,7 @@ namespace ChatServer
             Logger.WriteLog("OnError : " + e.Message);
 
             if (ID != null)
-                Task.Run(() => RedisManager.Instance.CloseRedisConnect(ID));
+                Task.Run(() => RedisManager.Instance.RemoveUserDict(ID));
             base.OnError(e);
         }
 
@@ -386,9 +387,12 @@ namespace ChatServer
                     return;
                 }
 
-                var result = Task.Run(() => InitClient(sessionID, UID, name, charID, guildID));
-
+                Stopwatch stopwatch = new Stopwatch();
+                stopwatch.Start();
                 Logger.WriteLog("Connected Client : " + Sessions.Count);
+                var result = InitClient(sessionID, UID, name, charID, guildID);
+                stopwatch.Stop();
+                Logger.WriteLog("Init Client : " + Sessions.Count + " Time : " + stopwatch.ElapsedMilliseconds);
 
             }
             catch (Exception e)
