@@ -11,7 +11,7 @@ using WebSocketSharp.Server;
 
 using System.Text.Json;
 using System.Text.Json.Serialization;
-
+using System.Collections.Concurrent;
 
 namespace ChatServer
 {
@@ -70,10 +70,10 @@ namespace ChatServer
         private string _env { get; }
 
         // 구독중인 채널, Client Session
-        private Dictionary<string, List<ChatUserDataEx>> _subChannelDict = new Dictionary<string, List<ChatUserDataEx>>();
+        private ConcurrentDictionary<string, ConcurrentBag<ChatUserDataEx>> _subChannelDict = new ConcurrentDictionary<string, ConcurrentBag<ChatUserDataEx>>();
 
         // SessionID, 구독중인 채널
-        private Dictionary<string, List<string>> _subSessionDict = new Dictionary<string, List<string>>();
+        private ConcurrentDictionary<string, ConcurrentBag<string>> _subSessionDict = new ConcurrentDictionary<string, ConcurrentBag<string>>();
 
         // 
         private ConnectionMultiplexer _chatMultiPlexer = null;
@@ -176,7 +176,7 @@ namespace ChatServer
             // 채널 기준으로 만든 Dict
             if (!_subChannelDict.ContainsKey(channel))
             {
-                _subChannelDict.Add(channel, new List<ChatUserDataEx>());
+                _subChannelDict.TryAdd(channel, new ConcurrentBag<ChatUserDataEx>());
                 await _chatState.subscriber.SubscribeAsync(channel, OnRedisMessageHandler);
             }
 
@@ -188,7 +188,7 @@ namespace ChatServer
 
             // 세션 기준으로 만든 DIct
             if (!_subSessionDict.ContainsKey(user.ID))
-                _subSessionDict.Add(user.ID, new List<string>());
+                _subSessionDict.TryAdd(user.ID, new ConcurrentBag<string>());
 
             _subSessionDict[user.ID].Add(channel);
 
@@ -266,7 +266,7 @@ namespace ChatServer
                 // 세션 기준으로 삭제
                 if (_subSessionDict.ContainsKey(ID))
                 {
-                    _subSessionDict[ID].Remove(channel);
+                    _subSessionDict[ID].TryTake(out channel);
                 }
 
                 // 구독 취소 는 하지않고 서버에서 해당 채널 DIct 에서만 제거
@@ -277,7 +277,7 @@ namespace ChatServer
                 // 세션 기준으로 삭제
                 if (_subSessionDict.ContainsKey(ID))
                 {
-                    _subSessionDict[ID].Remove(channel);                    
+                    _subSessionDict[ID].TryTake(out channel);                    
                 }
             }
             
@@ -292,12 +292,14 @@ namespace ChatServer
             {
                 if (_subSessionDict.ContainsKey(ID))
                 {
+                    ConcurrentBag<string> temp = new ConcurrentBag<string>();
                     //foreach (var ch in _subSessionDict[ID])
                     //{
-                    //    int index = _subChannelDict[ch].FindIndex((ChatUserDataEx p) => p.UserData.ID == ID);
-                    //    _subChannelDict[ch].RemoveAt(index);
-                    //}
-                    _subSessionDict.Remove(ID);
+                        //int index = _subChannelDict[ch].FindIndex((ChatUserDataEx p) => p.UserData.ID == ID);
+                        //_subChannelDict[ch].RemoveAt(index);
+                    //}                    
+                    
+                    _subSessionDict.TryRemove(ID, out temp);
                 }
             }
             catch
@@ -395,8 +397,8 @@ namespace ChatServer
                 //        _subChannelDict[ch].RemoveAt(index);
                 //    }
                 //}
-                
-                _subSessionDict.Remove(ID);
+                ConcurrentBag<string> temp = new ConcurrentBag<string>();
+                _subSessionDict.TryRemove(ID, out temp);
             }
 
             return ;
