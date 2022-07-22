@@ -39,12 +39,12 @@ namespace ChatServer
 
             // 게임서버 레디스 임시로 막아둠 ... Chat/AuthVerify 도 막아둠 
             // 게임서버 레디스 접속 
-            //bool result = RedisManager.Instance.ConnectGameServerRedis();
-            //if (!result)
-            //{
-            //    Logger.WriteLog("GameServer Redis conn Fail");
-            //    Environment.Exit(0);
-            //}
+            bool result = RedisManager.Instance.ConnectGameServerRedis();
+            if (!result)
+            {
+                Logger.WriteLog("GameServer Redis Connect Fail");
+                Environment.Exit(0);
+            }
 
             //var pong = RedisManager.Instance.gameServerState.db.Ping();
             //Console.WriteLine(pong);
@@ -91,18 +91,7 @@ namespace ChatServer
             Console.WriteLine("ServerStart - " + ipAddr + ":" + webSocketServer.Port);
             while (true)
             {
-
                 Thread.Sleep(1000);
-                //if (Console.KeyAvailable)
-                //{
-                //    var keyInfo = Console.ReadKey();
-                //    if (keyInfo.Key == ConsoleKey.Escape)
-                //    {
-                //        //queue.CompleteAdding();
-                //        Console.ReadLine();
-                //        break;
-                //    }
-                //}
             }
         }
     }

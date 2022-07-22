@@ -130,10 +130,10 @@ namespace ChatServer
 
                 redisConf.AbortOnConnectFail = false;
 
-                //this.gameServerRedis = ConnectionMultiplexer.Connect(redisConf);
-                //this.gameServerState.ServerSessionID = "Main";
-                //this.gameServerState.db = gameServerRedis.GetDatabase();
-                //this.gameServerState.subscriber = gameServerRedis.GetSubscriber();
+                this.gameServerRedis = ConnectionMultiplexer.Connect(redisConf);
+                this.gameServerState.ServerSessionID = "Game";
+                this.gameServerState.db = gameServerRedis.GetDatabase();
+                this.gameServerState.subscriber = gameServerRedis.GetSubscriber();
 
                 if (this.gameServerRedis == null)
                 {
@@ -155,7 +155,6 @@ namespace ChatServer
             try
             {
                 var result = await gameServerState.db.KeyExistsAsync("Session:" + SessionID);
-                //var result = await conn.db.KeyExistsAsync("Session:" + SessionID);
                 if (!result)
                     return false;
             }

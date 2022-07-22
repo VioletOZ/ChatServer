@@ -321,8 +321,6 @@ namespace ChatServer
             // 채팅서버만 끊길 경우를 대비해 재접속 관련 코드 추가 필요.
             // 레디스에서 세션확인 해야함
             // 지금은 일단 그냥 접속종료
-
-            
             try
             {
                 Logger.WriteLog("OnClose : " + ID);
@@ -410,13 +408,13 @@ namespace ChatServer
             // 접속시에 유저정보 세팅
             m_ChatPlayer = new ChatPlayer(ID, sessionId, uid, name, guildId, charId);
 
-            //var result = await m_ChatPlayer.AuthVerify();            
-            //if (!result)
-            //{
-            //    Logger.WriteLog("세션 인증실패 - SessionID : " + sessionId + " " + uid + name);
-            //    Close(CloseStatusCode.ServerError, "InvalidData");
-            //    return false;
-            //}
+            result  = await m_ChatPlayer.AuthVerify();
+            if (!result)
+            {
+                Logger.WriteLog("세션 인증실패 - SessionID : " + sessionId + " " + uid + name);
+                Close(CloseStatusCode.ServerError, "InvalidData");
+                return false;
+            }
 
             if (OnRedisMessageHandler == null)
             {
