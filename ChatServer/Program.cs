@@ -24,8 +24,7 @@ namespace ChatServer
             StreamReader r = new StreamReader("cfg/ChatServer.cfg");
             Constance.Env = JsonSerializer.Deserialize<Env>(r.ReadToEnd());
             
-            Console.WriteLine(Constance.Env.ChatServerPort);
-            Console.WriteLine(Constance.Env.ChatServerLogPath);
+            Console.WriteLine(Constance.Env.ChatServerPort);            
 
             Console.WriteLine(Constance.Env.ChatServerRedisDBServerIP);
 
