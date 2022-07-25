@@ -6,7 +6,7 @@ WORKDIR /server
 
 FROM mcr.microsoft.com/dotnet/sdk:5.0 AS build
 WORKDIR /src
-EXPOSE 80 443 9000
+EXPOSE 80 443 38002
 
 RUN apt-get update
 RUN apt-get install procps -y
