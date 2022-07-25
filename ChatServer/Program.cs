@@ -68,7 +68,8 @@ namespace ChatServer
             if (webSocketServer != null)
                 return;
 
-            webSocketServer = new WebSocketServer(Constance.Env.ChatServerPort);
+            int port = Int32.Parse(Constance.Env.ChatServerPort);
+            webSocketServer = new WebSocketServer(port);
             webSocketServer.AddWebSocketService<Chat>("/Chat");
 
             //서버시작
